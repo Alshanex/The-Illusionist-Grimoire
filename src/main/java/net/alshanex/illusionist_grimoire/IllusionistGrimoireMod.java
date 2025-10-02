@@ -1,5 +1,6 @@
 package net.alshanex.illusionist_grimoire;
 
+import net.alshanex.illusionist_grimoire.registry.IGSchoolRegistry;
 import org.slf4j.Logger;
 
 import com.mojang.logging.LogUtils;
@@ -43,6 +44,8 @@ public class IllusionistGrimoireMod {
     public IllusionistGrimoireMod(IEventBus modEventBus, ModContainer modContainer) {
         // Register the commonSetup method for modloading
         modEventBus.addListener(this::commonSetup);
+
+        IGSchoolRegistry.SCHOOLS.register(modEventBus);
 
         // Register ourselves for server and other game events we are interested in.
         // Note that this is necessary if and only if we want *this* class (ExampleMod) to respond directly to events.
