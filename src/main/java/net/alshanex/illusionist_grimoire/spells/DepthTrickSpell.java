@@ -108,30 +108,4 @@ public class DepthTrickSpell extends AbstractSpell {
     public int getDuration(int spellLevel, LivingEntity caster) {
         return (int) (getSpellPower(spellLevel, caster) * 20 * 30);
     }
-
-    @Override
-    public float getSpellPower(int spellLevel, @Nullable Entity sourceEntity) {
-
-        double entitySpellPowerModifier = 1;
-        double entitySchoolPowerModifier = 1;
-
-        float configPowerModifier = (float) ServerConfigs.getSpellConfig(this).powerMultiplier();
-        if (sourceEntity instanceof LivingEntity livingEntity) {
-            entitySpellPowerModifier = (float) livingEntity.getAttributeValue(AttributeRegistry.SPELL_POWER);
-            entitySchoolPowerModifier = SchoolRegistry.EVOCATION.get().getPowerFor(livingEntity);
-        }
-
-        return (float) ((baseSpellPower + spellPowerPerLevel * (spellLevel - 1)) * entitySpellPowerModifier * entitySchoolPowerModifier * configPowerModifier);
-    }
-
-    @Override
-    public float getEntityPowerMultiplier(@Nullable LivingEntity entity) {
-        float base = (float) ServerConfigs.getSpellConfig(this).powerMultiplier();
-        if (entity == null) {
-            return base;
-        }
-        var entitySpellPowerModifier = (float) entity.getAttributeValue(AttributeRegistry.SPELL_POWER);
-        var entitySchoolPowerModifier = SchoolRegistry.EVOCATION.get().getPowerFor(entity);
-        return (float) (base * entitySpellPowerModifier * entitySchoolPowerModifier);
-    }
 }
