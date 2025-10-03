@@ -42,8 +42,8 @@ public class DepthTrickSpell extends AbstractSpell {
     private final DefaultConfig defaultConfig = new DefaultConfig()
             .setMinRarity(SpellRarity.RARE)
             .setSchoolResource(IGSchoolRegistry.ILLUSIONISM_RESOURCE)
-            .setMaxLevel(8)
-            .setCooldownSeconds(60)
+            .setMaxLevel(1)
+            .setCooldownSeconds(45)
             .build();
 
     public DepthTrickSpell() {

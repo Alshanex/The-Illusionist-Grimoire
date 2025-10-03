@@ -14,7 +14,7 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.RenderLivingEvent;
 
 @EventBusSubscriber(modid = IllusionistGrimoireMod.MODID, bus = EventBusSubscriber.Bus.GAME, value = Dist.CLIENT)
-public class DepthTrickEventHandler {
+public class DepthTrickClientEventHandler {
     @SubscribeEvent
     public static void onRenderEntity(RenderLivingEvent.Pre<?, ?> event) {
         Player player = Minecraft.getInstance().player;
