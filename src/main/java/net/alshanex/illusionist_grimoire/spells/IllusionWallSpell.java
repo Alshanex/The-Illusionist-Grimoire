@@ -30,7 +30,7 @@ public class IllusionWallSpell extends AbstractSpell {
 
     @Override
     public List<MutableComponent> getUniqueInfo(int spellLevel, LivingEntity caster) {
-        String size = getWidth(spellLevel) * 2 + "x" + getHeight(spellLevel);
+        String size = getHeight(spellLevel) + "x" + getHeight(spellLevel);
         return List.of(
                 Component.translatable("ui.illusionist_grimoire.wall_size", size)
         );
@@ -79,7 +79,7 @@ public class IllusionWallSpell extends AbstractSpell {
     @Override
     public void onCast(Level level, int spellLevel, LivingEntity entity, CastSource castSource, MagicData playerMagicData) {
         entity.addEffect(new MobEffectInstance(IGEffectRegistry.TRUE_VISION, 600, 0, false, false, true));
-        entity.addEffect(new MobEffectInstance(MobEffectRegistry.TRUE_INVISIBILITY, 100, 0, false, false, true));
+        entity.addEffect(new MobEffectInstance(MobEffectRegistry.TRUE_INVISIBILITY, 20, 0, false, false, true));
 
         placePhaseWall(entity, level, getWidth(spellLevel), getHeight(spellLevel));
 

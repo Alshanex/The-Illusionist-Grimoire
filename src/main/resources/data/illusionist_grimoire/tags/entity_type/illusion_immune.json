@@ -1,0 +1,14 @@
+{
+  "replace": false,
+  "values": [
+    "#c:bosses",
+    "minecraft:ender_dragon",
+    "minecraft:wither",
+    "minecraft:warden",
+    "minecraft:vex",
+    "minecraft:evoker",
+    "minecraft:elder_guardian",
+    "irons_spellbooks:dead_king",
+    "irons_spellbooks:fire_boss"
+  ]
+}
