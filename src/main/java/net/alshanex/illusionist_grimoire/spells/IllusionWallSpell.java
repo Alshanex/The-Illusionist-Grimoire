@@ -26,20 +26,21 @@ import java.util.Optional;
 
 @AutoSpellConfig
 public class IllusionWallSpell extends AbstractSpell {
-    private final ResourceLocation spellId = ResourceLocation.fromNamespaceAndPath(IllusionistGrimoireMod.MODID, "schrodinger_box");
+    private final ResourceLocation spellId = ResourceLocation.fromNamespaceAndPath(IllusionistGrimoireMod.MODID, "illusion_wall");
 
     @Override
     public List<MutableComponent> getUniqueInfo(int spellLevel, LivingEntity caster) {
+        String size = getWidth(spellLevel) * 2 + "x" + getHeight(spellLevel);
         return List.of(
-                Component.translatable("ui.illusionist_grimoire.wall_size", getRadius(spellLevel))
+                Component.translatable("ui.illusionist_grimoire.wall_size", size)
         );
     }
 
     private final DefaultConfig defaultConfig = new DefaultConfig()
             .setMinRarity(SpellRarity.COMMON)
             .setSchoolResource(IGSchoolRegistry.ILLUSIONISM_RESOURCE)
-            .setMaxLevel(10)
-            .setCooldownSeconds(8)
+            .setMaxLevel(6)
+            .setCooldownSeconds(10)
             .build();
 
     public IllusionWallSpell() {
@@ -80,83 +81,49 @@ public class IllusionWallSpell extends AbstractSpell {
         entity.addEffect(new MobEffectInstance(IGEffectRegistry.TRUE_VISION, 600, 0, false, false, true));
         entity.addEffect(new MobEffectInstance(MobEffectRegistry.TRUE_INVISIBILITY, 100, 0, false, false, true));
 
-        createPhaseBox(entity, level, getRadius(spellLevel));
+        placePhaseWall(entity, level, getWidth(spellLevel), getHeight(spellLevel));
 
         super.onCast(level, spellLevel, entity, castSource, playerMagicData);
     }
 
-    public static void createPhaseBox(Entity entity, Level level, int radius) {
-        BlockPos center = entity.blockPosition();
+    public static void placePhaseWall(Entity entity, Level level, int width, int height) {
+        // Get entity's facing direction (only cardinal directions)
+        Direction facing = entity.getDirection();
+        BlockPos entityPos = entity.blockPosition();
 
-        createWalls(level, center, radius);
+        // Get starting position (2 blocks in front of entity)
+        BlockPos startPos = entityPos.relative(facing, 2);
 
-        createRoof(level, center, radius);
+        // Determine perpendicular direction for width
+        Direction perpendicular = getPerpendicularDirection(facing);
 
-        createFloor(level, center, radius);
-    }
+        // Place blocks in a grid pattern
+        for (int h = 0; h < height; h++) {
+            for (int w = -width; w <= width; w++) {
+                BlockPos placePos = startPos
+                        .relative(perpendicular, w)
+                        .above(h);
 
-    private static void createWalls(Level level, BlockPos center, int radius) {
-        // North wall (negative Z)
-        for (int x = -radius; x <= radius; x++) {
-            for (int y = 0; y <= radius; y++) {
-                BlockPos pos = center.offset(x, y, -radius);
-                replaceWithPhaseBlock(level, pos);
-            }
-        }
-
-        // South wall (positive Z)
-        for (int x = -radius; x <= radius; x++) {
-            for (int y = 0; y <= radius; y++) {
-                BlockPos pos = center.offset(x, y, radius);
-                replaceWithPhaseBlock(level, pos);
-            }
-        }
-
-        // East wall (positive X)
-        for (int z = -radius + 1; z < radius; z++) { // -1 and +1 to avoid corner duplicates
-            for (int y = 0; y <= radius; y++) {
-                BlockPos pos = center.offset(radius, y, z);
-                replaceWithPhaseBlock(level, pos);
-            }
-        }
-
-        // West wall (negative X)
-        for (int z = -radius + 1; z < radius; z++) { // -1 and +1 to avoid corner duplicates
-            for (int y = 0; y <= radius; y++) {
-                BlockPos pos = center.offset(-radius, y, z);
-                replaceWithPhaseBlock(level, pos);
+                // Only replace air blocks
+                if (level.getBlockState(placePos).getBlock() == Blocks.AIR) {
+                    level.setBlock(placePos, IGBlockRegistry.ILLUSION_BLOCK.get().defaultBlockState(), 3);
+                }
             }
         }
     }
 
-    private static void createRoof(Level level, BlockPos center, int radius) {
-        // Roof at height = radius
-        for (int x = -radius; x <= radius; x++) {
-            for (int z = -radius; z <= radius; z++) {
-                BlockPos pos = center.offset(x, radius, z);
-                replaceWithPhaseBlock(level, pos);
-            }
-        }
+    private static Direction getPerpendicularDirection(Direction facing) {
+        return switch (facing) {
+            case NORTH, SOUTH -> Direction.EAST;
+            case EAST, WEST -> Direction.NORTH;
+            default -> Direction.EAST; // Fallback
+        };
     }
 
-    private static void createFloor(Level level, BlockPos center, int radius) {
-        // Floor at entity's feet level
-        for (int x = -radius; x <= radius; x++) {
-            for (int z = -radius; z <= radius; z++) {
-                BlockPos pos = center.offset(x, 0, z);
-                replaceWithPhaseBlock(level, pos);
-            }
-        }
-    }
-
-    private static void replaceWithPhaseBlock(Level level, BlockPos pos) {
-        // Only replace air blocks
-        if (level.getBlockState(pos).getBlock() == Blocks.AIR) {
-            level.setBlock(pos, IGBlockRegistry.ILLUSION_BLOCK.get().defaultBlockState(), 3);
-        }
-    }
-
-    private int getRadius(int spellLevel) {
+    private int getHeight(int spellLevel) {
         return 2 + spellLevel;
+    }
+    private int getWidth(int spellLevel) {
+        return (int) getHeight(spellLevel) / 2;
     }
 }
