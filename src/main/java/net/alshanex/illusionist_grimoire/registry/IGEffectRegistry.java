@@ -2,6 +2,7 @@ package net.alshanex.illusionist_grimoire.registry;
 
 import io.redspace.ironsspellbooks.effect.MagicMobEffect;
 import net.alshanex.illusionist_grimoire.IllusionistGrimoireMod;
+import net.alshanex.illusionist_grimoire.effect.ParanoiaMobEffect;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectCategory;
@@ -18,4 +19,5 @@ public class IGEffectRegistry {
 
     //public static final DeferredHolder<MobEffect, MobEffect> TRUE_VISION = MOB_EFFECT_DEFERRED_REGISTER.register("true_vision", () -> new MagicMobEffect(MobEffectCategory.NEUTRAL, 0x6c42f5));
     public static final DeferredHolder<MobEffect, MobEffect> DEPTH_TRICK = MOB_EFFECT_DEFERRED_REGISTER.register("depth_trick", () -> new MagicMobEffect(MobEffectCategory.HARMFUL, 4800826));
+    public static final DeferredHolder<MobEffect, MobEffect> PARANOIA = MOB_EFFECT_DEFERRED_REGISTER.register("paranoia", () -> new ParanoiaMobEffect(MobEffectCategory.HARMFUL, 4800826));
 }
