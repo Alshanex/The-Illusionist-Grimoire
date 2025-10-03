@@ -16,6 +16,6 @@ public class IGEffectRegistry {
         MOB_EFFECT_DEFERRED_REGISTER.register(eventBus);
     }
 
-    public static final DeferredHolder<MobEffect, MobEffect> TRUE_VISION = MOB_EFFECT_DEFERRED_REGISTER.register("antigravity", () -> new MagicMobEffect(MobEffectCategory.NEUTRAL, 0x6c42f5));
+    //public static final DeferredHolder<MobEffect, MobEffect> TRUE_VISION = MOB_EFFECT_DEFERRED_REGISTER.register("antigravity", () -> new MagicMobEffect(MobEffectCategory.NEUTRAL, 0x6c42f5));
 
 }

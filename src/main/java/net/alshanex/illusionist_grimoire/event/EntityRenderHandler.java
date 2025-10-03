@@ -1,8 +1,9 @@
 package net.alshanex.illusionist_grimoire.event;
 
 import net.alshanex.illusionist_grimoire.IllusionistGrimoireMod;
+import net.alshanex.illusionist_grimoire.block.IllusionBlockEntity;
 import net.alshanex.illusionist_grimoire.registry.IGBlockRegistry;
-import net.alshanex.illusionist_grimoire.registry.IGEffectRegistry;
+import net.alshanex.illusionist_grimoire.util.IGUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Entity;
@@ -25,7 +26,7 @@ public class EntityRenderHandler {
     public static void onRenderEntity(RenderLivingEvent.Pre<?, ?> event) {
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null || mc.level == null) return;
-        if (mc.player.hasEffect(IGEffectRegistry.TRUE_VISION)) return;
+        if (IGUtils.canMobBypassIllusions(mc.player)) return;
 
         Entity entity = event.getEntity();
         Vec3 playerPos = mc.player.getEyePosition(event.getPartialTick());
@@ -64,8 +65,10 @@ public class EntityRenderHandler {
             Vec3 checkPos = start.add(direction.scale(d));
             BlockPos pos = BlockPos.containing(checkPos);
 
-            if (mc.level.getBlockState(pos).getBlock() == IGBlockRegistry.ILLUSION_BLOCK.get()) {
-                phaseBlocks.add(pos);
+            if(mc.level.getBlockEntity(pos) instanceof IllusionBlockEntity illusionBlockEntity && !mc.player.is(illusionBlockEntity.getSummoner())) {
+                if(!IGUtils.canBypassIllusions(mc.player, illusionBlockEntity.getOwnerSpellPower())) {
+                    phaseBlocks.add(pos);
+                }
             }
         }
 

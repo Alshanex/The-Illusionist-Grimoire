@@ -2,9 +2,11 @@ package net.alshanex.illusionist_grimoire.spells;
 
 import io.redspace.ironsspellbooks.api.config.DefaultConfig;
 import io.redspace.ironsspellbooks.api.magic.MagicData;
+import io.redspace.ironsspellbooks.api.registry.AttributeRegistry;
 import io.redspace.ironsspellbooks.api.spells.*;
 import io.redspace.ironsspellbooks.registries.MobEffectRegistry;
 import net.alshanex.illusionist_grimoire.IllusionistGrimoireMod;
+import net.alshanex.illusionist_grimoire.block.IllusionBlockEntity;
 import net.alshanex.illusionist_grimoire.registry.IGBlockRegistry;
 import net.alshanex.illusionist_grimoire.registry.IGEffectRegistry;
 import net.alshanex.illusionist_grimoire.registry.IGSchoolRegistry;
@@ -30,7 +32,7 @@ public class IllusionWallSpell extends AbstractSpell {
 
     @Override
     public List<MutableComponent> getUniqueInfo(int spellLevel, LivingEntity caster) {
-        String size = getHeight(spellLevel) + "x" + getHeight(spellLevel);
+        String size = getHeight(spellLevel, caster) + "x" + getHeight(spellLevel, caster);
         return List.of(
                 Component.translatable("ui.illusionist_grimoire.wall_size", size)
         );
@@ -78,15 +80,15 @@ public class IllusionWallSpell extends AbstractSpell {
 
     @Override
     public void onCast(Level level, int spellLevel, LivingEntity entity, CastSource castSource, MagicData playerMagicData) {
-        entity.addEffect(new MobEffectInstance(IGEffectRegistry.TRUE_VISION, 600, 0, false, false, true));
         entity.addEffect(new MobEffectInstance(MobEffectRegistry.TRUE_INVISIBILITY, 20, 0, false, false, true));
 
-        placePhaseWall(entity, level, getWidth(spellLevel), getHeight(spellLevel));
+        double spellPower = entity.getAttributeValue(AttributeRegistry.EVOCATION_SPELL_POWER);
+        placePhaseWall(entity, level, getWidth(spellLevel, entity), getHeight(spellLevel, entity), spellPower);
 
         super.onCast(level, spellLevel, entity, castSource, playerMagicData);
     }
 
-    public static void placePhaseWall(Entity entity, Level level, int width, int height) {
+    public static void placePhaseWall(LivingEntity entity, Level level, int width, int height, double ownerSpellPower) {
         // Get entity's facing direction (only cardinal directions)
         Direction facing = entity.getDirection();
         BlockPos entityPos = entity.blockPosition();
@@ -107,6 +109,13 @@ public class IllusionWallSpell extends AbstractSpell {
                 // Only replace air blocks
                 if (level.getBlockState(placePos).getBlock() == Blocks.AIR) {
                     level.setBlock(placePos, IGBlockRegistry.ILLUSION_BLOCK.get().defaultBlockState(), 3);
+
+                    // Set the owner spell power in the block entity
+                    if (level.getBlockEntity(placePos) instanceof IllusionBlockEntity illusionBlockEntity) {
+                        illusionBlockEntity.setOwnerSpellPower(ownerSpellPower);
+                        illusionBlockEntity.setSummoner(entity);
+                        illusionBlockEntity.setChanged(); // Mark as changed to ensure it saves
+                    }
                 }
             }
         }
@@ -120,10 +129,15 @@ public class IllusionWallSpell extends AbstractSpell {
         };
     }
 
-    private int getHeight(int spellLevel) {
-        return 2 + spellLevel;
+    private int getHeight(int spellLevel, LivingEntity caster) {
+        return 1 + getSpellPowerBonus(spellLevel, caster) + spellLevel;
     }
-    private int getWidth(int spellLevel) {
-        return (int) getHeight(spellLevel) / 2;
+
+    private int getWidth(int spellLevel, LivingEntity caster) {
+        return (int) getHeight(spellLevel, caster) / 2;
+    }
+
+    private int getSpellPowerBonus(int spellLevel, LivingEntity caster) {
+        return (int) (getSpellPower(spellLevel, caster) * .2f);
     }
 }

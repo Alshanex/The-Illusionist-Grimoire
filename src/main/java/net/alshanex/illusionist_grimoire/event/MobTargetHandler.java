@@ -2,7 +2,7 @@ package net.alshanex.illusionist_grimoire.event;
 
 import net.alshanex.illusionist_grimoire.IllusionistGrimoireMod;
 import net.alshanex.illusionist_grimoire.registry.IGBlockRegistry;
-import net.alshanex.illusionist_grimoire.util.ModTags;
+import net.alshanex.illusionist_grimoire.util.IGUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
@@ -20,7 +20,7 @@ public class MobTargetHandler {
 
     @SubscribeEvent
     public static void onMobChangeTarget(LivingChangeTargetEvent event) {
-        if (!(event.getEntity() instanceof Mob mob) || event.getEntity().getType().is(ModTags.ILLUSION_IMMUNE_ENTITIES)) return;
+        if (!(event.getEntity() instanceof Mob mob) || IGUtils.canMobBypassIllusions(event.getEntity())) return;
 
         LivingEntity newTarget = event.getNewAboutToBeSetTarget();
         if (newTarget == null) return;
@@ -34,7 +34,8 @@ public class MobTargetHandler {
     public static void onEntityTick(EntityTickEvent.Pre event) {
         if (event.getEntity().tickCount % 10 != 0) return;
 
-        if (!(event.getEntity() instanceof Mob mob) || event.getEntity().getType().is(ModTags.ILLUSION_IMMUNE_ENTITIES)) return;
+        if (!(event.getEntity() instanceof Mob mob)
+                || (event.getEntity() instanceof LivingEntity livingEntity && IGUtils.canMobBypassIllusions(livingEntity))) return;
 
         LivingEntity target = mob.getTarget();
         if (target == null) return;
