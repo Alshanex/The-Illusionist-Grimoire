@@ -3,6 +3,10 @@
   "package": "net.alshanex.illusionist_grimoire.mixin",
   "compatibilityLevel": "JAVA_21",
   "refmap": "illusionist_grimoire.refmap.json",
+  "mixins": [
+    "MobDepthTrickMixin",
+    "MobAccessor"
+  ],
   "client": [
     "ShadowRendererMixin"
   ],

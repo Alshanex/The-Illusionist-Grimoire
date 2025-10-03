@@ -3,7 +3,9 @@ package net.alshanex.illusionist_grimoire.spells;
 import io.redspace.ironsspellbooks.api.config.DefaultConfig;
 import io.redspace.ironsspellbooks.api.magic.MagicData;
 import io.redspace.ironsspellbooks.api.registry.AttributeRegistry;
+import io.redspace.ironsspellbooks.api.registry.SchoolRegistry;
 import io.redspace.ironsspellbooks.api.spells.*;
+import io.redspace.ironsspellbooks.config.ServerConfigs;
 import io.redspace.ironsspellbooks.registries.MobEffectRegistry;
 import net.alshanex.illusionist_grimoire.IllusionistGrimoireMod;
 import net.alshanex.illusionist_grimoire.block.IllusionBlockEntity;
@@ -23,6 +25,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 
+import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Optional;
 
@@ -41,7 +44,7 @@ public class IllusionWallSpell extends AbstractSpell {
     private final DefaultConfig defaultConfig = new DefaultConfig()
             .setMinRarity(SpellRarity.COMMON)
             .setSchoolResource(IGSchoolRegistry.ILLUSIONISM_RESOURCE)
-            .setMaxLevel(6)
+            .setMaxLevel(4)
             .setCooldownSeconds(10)
             .build();
 
@@ -139,5 +142,22 @@ public class IllusionWallSpell extends AbstractSpell {
 
     private int getSpellPowerBonus(int spellLevel, LivingEntity caster) {
         return (int) (getSpellPower(spellLevel, caster) * .2f);
+    }
+
+    @Override
+    public float getSpellPower(int spellLevel, @Nullable Entity sourceEntity) {
+
+        double entitySpellPowerModifier = 1;
+        double entitySchoolPowerModifier = 1;
+
+        float configPowerModifier = (float) ServerConfigs.getSpellConfig(this).powerMultiplier();
+        //int level = getLevel(spellLevel, null);
+        if (sourceEntity instanceof LivingEntity livingEntity) {
+            //level = getLevel(spellLevel, livingEntity);
+            entitySpellPowerModifier = (float) livingEntity.getAttributeValue(AttributeRegistry.SPELL_POWER);
+            entitySchoolPowerModifier = SchoolRegistry.EVOCATION.get().getPowerFor(livingEntity);
+        }
+
+        return (float) ((baseSpellPower + spellPowerPerLevel * (spellLevel - 1)) * entitySpellPowerModifier * entitySchoolPowerModifier * configPowerModifier);
     }
 }

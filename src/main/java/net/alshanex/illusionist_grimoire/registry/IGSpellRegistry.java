@@ -2,6 +2,7 @@ package net.alshanex.illusionist_grimoire.registry;
 
 import io.redspace.ironsspellbooks.api.spells.AbstractSpell;
 import net.alshanex.illusionist_grimoire.IllusionistGrimoireMod;
+import net.alshanex.illusionist_grimoire.spells.DepthTrickSpell;
 import net.alshanex.illusionist_grimoire.spells.IllusionWallSpell;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredRegister;
@@ -21,4 +22,5 @@ public class IGSpellRegistry {
     }
 
     public static final Supplier<AbstractSpell> ILLUSION_WALL = registerSpell(new IllusionWallSpell());
+    public static final Supplier<AbstractSpell> DEPTH_TRICK = registerSpell(new DepthTrickSpell());
 }
