@@ -1,3 +1,6 @@
 {
-  "school.illusionist_grimoire.illusion": "Illusion"
+  "school.illusionist_grimoire.illusion": "Illusion",
+  "ui.illusionist_grimoire.wall_size": "Radius: %d",
+  "spell.illusionist_grimoire.schrodinger_box": "Schrodinger's Box",
+  "spell.illusionist_grimoire.schrodinger_box.desc": "Creates an illusionary box around the target for 30 seconds, making entities lose track of it."
 }

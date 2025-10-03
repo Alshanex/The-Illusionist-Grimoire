@@ -1,0 +1,12 @@
+{
+  "required": true,
+  "package": "net.alshanex.illusionist_grimoire.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "refmap": "illusionist_grimoire.refmap.json",
+  "client": [
+    "ShadowRendererMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
