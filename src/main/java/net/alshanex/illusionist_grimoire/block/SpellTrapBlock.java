@@ -1,9 +1,16 @@
 package net.alshanex.illusionist_grimoire.block;
 
 import com.mojang.serialization.MapCodec;
+import net.alshanex.illusionist_grimoire.item.MagicTrapItem;
 import net.alshanex.illusionist_grimoire.registry.IGBlockEntityRegistry;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.ItemInteractionResult;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
@@ -18,6 +25,7 @@ import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.DirectionProperty;
 import net.minecraft.world.level.material.PushReaction;
+import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
@@ -44,7 +52,7 @@ public class SpellTrapBlock extends BaseEntityBlock {
 
     public SpellTrapBlock() {
         this(Properties.of()
-                .strength(0.2F)
+                .strength(-1.0F, 3600000.0F)
                 .sound(SoundType.STONE)
                 .noCollission()
                 .noOcclusion()

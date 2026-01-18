@@ -23,9 +23,11 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 
 import java.util.List;
+import java.util.UUID;
 
 public class MagicTrapItem extends Item implements IPresetSpellContainer {
     public MagicTrapItem(Properties properties) {
@@ -50,93 +52,115 @@ public class MagicTrapItem extends Item implements IPresetSpellContainer {
         Direction clickedFace = context.getClickedFace();
         Player player = context.getPlayer();
         ItemStack itemStack = context.getItemInHand();
+        BlockState clickedState = level.getBlockState(clickedPos);
 
-        // Check if the item has a spell
-        if (!ISpellContainer.isSpellContainer(itemStack)) {
-            if (player != null && !level.isClientSide) {
-                if (player instanceof ServerPlayer serverPlayer) {
-                    serverPlayer.connection.send(new ClientboundSetActionBarTextPacket(
-                            Component.translatable("message.illusionist_grimoire.trap.no_spell_bound")
-                                    .withStyle(style -> style.withColor(0xFF5555))));
+        if(player != null){
+            if(player.isShiftKeyDown()){
+                if(clickedState.getBlock() instanceof SpellTrapBlock){
+                    if (!level.isClientSide) {
+                        BlockEntity blockEntity = level.getBlockEntity(clickedPos);
+                        if(blockEntity instanceof SpellTrapBlockEntity spellTrapBlockEntity){
+                            if(spellTrapBlockEntity.isOwner(player.getUUID())){
+                                BlockState prevState = blockEntity.getBlockState();
+                                level.removeBlock(clickedPos, false);
+                                BlockState postState = blockEntity.getBlockState();
+                                level.sendBlockUpdated(clickedPos, prevState, postState, 3);
+
+                                // Play break sound
+                                level.playSound(null, clickedPos, SoundEvents.AMETHYST_CLUSTER_BREAK,
+                                        SoundSource.BLOCKS, 1.0f, 0.8f);
+                            }
+                        }
+                    }
+                    return InteractionResult.sidedSuccess(level.isClientSide);
                 }
-            }
-            return InteractionResult.FAIL;
-        }
-
-        ISpellContainer spellContainer = ISpellContainer.get(itemStack);
-        if (spellContainer == null || spellContainer.isEmpty()) {
-            if (player != null && !level.isClientSide) {
-                if (player instanceof ServerPlayer serverPlayer) {
-                    serverPlayer.connection.send(new ClientboundSetActionBarTextPacket(
-                            Component.translatable("message.illusionist_grimoire.trap.no_spell_bound")
-                                    .withStyle(style -> style.withColor(0xFF5555))));
-                }
-            }
-            return InteractionResult.FAIL;
-        }
-
-        // Get the first spell from the container
-        SpellData spellData = spellContainer.getSpellAtIndex(0);
-        if (spellData == null || spellData.getSpell() == null) {
-            if (player != null && !level.isClientSide) {
-                if (player instanceof ServerPlayer serverPlayer) {
-                    serverPlayer.connection.send(new ClientboundSetActionBarTextPacket(
-                            Component.translatable("message.illusionist_grimoire.trap.no_spell_bound")
-                                    .withStyle(style -> style.withColor(0xFF5555))));
-                }
-            }
-            return InteractionResult.FAIL;
-        }
-
-        if(spellData.getSpell().getCastType() == CastType.CONTINUOUS || ModTags.isSpellInTag(spellData.getSpell(), ModTags.TRAP_SPELL_BLACKLIST)){
-            if (player != null && !level.isClientSide) {
-                if (player instanceof ServerPlayer serverPlayer) {
-                    serverPlayer.connection.send(new ClientboundSetActionBarTextPacket(
-                            Component.translatable("message.illusionist_grimoire.trap.spell_not_allowed")
-                                    .withStyle(style -> style.withColor(0xFF5555))));
-                }
-            }
-            return InteractionResult.FAIL;
-        }
-
-        // Calculate position for the trap block (on the clicked face)
-        BlockPos trapPos = clickedPos.relative(clickedFace);
-
-        // Check if we can place the block there
-        if (!level.getBlockState(trapPos).canBeReplaced()) {
-            return InteractionResult.FAIL;
-        }
-
-        // Check if the supporting block is sturdy
-        BlockPos supportPos = trapPos.relative(clickedFace.getOpposite());
-        if (!level.getBlockState(supportPos).isFaceSturdy(level, supportPos, clickedFace)) {
-            return InteractionResult.FAIL;
-        }
-
-        if (!level.isClientSide) {
-            // Place the spell trap block
-            BlockState trapState = IGBlockRegistry.SPELL_TRAP.get().defaultBlockState()
-                    .setValue(SpellTrapBlock.FACING, clickedFace);
-
-            level.setBlock(trapPos, trapState, 3);
-
-            // Configure the block entity
-            if (level.getBlockEntity(trapPos) instanceof SpellTrapBlockEntity trapEntity) {
-                // Set the spell
-                trapEntity.setSpell(spellData.getSpell().getSpellResource(), spellData.getLevel());
-
-                // Capture and set player snapshot
-                if (player != null) {
-                    PlayerSnapshot snapshot = PlayerSnapshot.fromPlayer(player);
-                    trapEntity.setPlayerSnapshot(snapshot);
-                    trapEntity.setOwner(player);
+            } else {
+                // Check if the item has a spell
+                if (!ISpellContainer.isSpellContainer(itemStack)) {
+                    if (!level.isClientSide) {
+                        if (player instanceof ServerPlayer serverPlayer) {
+                            serverPlayer.connection.send(new ClientboundSetActionBarTextPacket(
+                                    Component.translatable("message.illusionist_grimoire.trap.no_spell_bound")
+                                            .withStyle(style -> style.withColor(0xFF5555))));
+                        }
+                    }
+                    return InteractionResult.FAIL;
                 }
 
-                trapEntity.setChanged();
-            }
+                ISpellContainer spellContainer = ISpellContainer.get(itemStack);
+                if (spellContainer == null || spellContainer.isEmpty()) {
+                    if (!level.isClientSide) {
+                        if (player instanceof ServerPlayer serverPlayer) {
+                            serverPlayer.connection.send(new ClientboundSetActionBarTextPacket(
+                                    Component.translatable("message.illusionist_grimoire.trap.no_spell_bound")
+                                            .withStyle(style -> style.withColor(0xFF5555))));
+                        }
+                    }
+                    return InteractionResult.FAIL;
+                }
 
-            // Play placement sound
-            level.playSound(null, trapPos, SoundEvents.ENCHANTMENT_TABLE_USE, SoundSource.BLOCKS, 1.0f, 1.0f);
+                // Get the first spell from the container
+                SpellData spellData = spellContainer.getSpellAtIndex(0);
+                if (spellData == null || spellData.getSpell() == null) {
+                    if (!level.isClientSide) {
+                        if (player instanceof ServerPlayer serverPlayer) {
+                            serverPlayer.connection.send(new ClientboundSetActionBarTextPacket(
+                                    Component.translatable("message.illusionist_grimoire.trap.no_spell_bound")
+                                            .withStyle(style -> style.withColor(0xFF5555))));
+                        }
+                    }
+                    return InteractionResult.FAIL;
+                }
+
+                if(spellData.getSpell().getCastType() == CastType.CONTINUOUS || ModTags.isSpellInTag(spellData.getSpell(), ModTags.TRAP_SPELL_BLACKLIST)){
+                    if (!level.isClientSide) {
+                        if (player instanceof ServerPlayer serverPlayer) {
+                            serverPlayer.connection.send(new ClientboundSetActionBarTextPacket(
+                                    Component.translatable("message.illusionist_grimoire.trap.spell_not_allowed")
+                                            .withStyle(style -> style.withColor(0xFF5555))));
+                        }
+                    }
+                    return InteractionResult.FAIL;
+                }
+
+                // Calculate position for the trap block (on the clicked face)
+                BlockPos trapPos = clickedPos.relative(clickedFace);
+
+                // Check if we can place the block there
+                if (!level.getBlockState(trapPos).canBeReplaced()) {
+                    return InteractionResult.FAIL;
+                }
+
+                // Check if the supporting block is sturdy
+                BlockPos supportPos = trapPos.relative(clickedFace.getOpposite());
+                if (!level.getBlockState(supportPos).isFaceSturdy(level, supportPos, clickedFace)) {
+                    return InteractionResult.FAIL;
+                }
+
+                if (!level.isClientSide) {
+                    // Place the spell trap block
+                    BlockState trapState = IGBlockRegistry.SPELL_TRAP.get().defaultBlockState()
+                            .setValue(SpellTrapBlock.FACING, clickedFace);
+
+                    level.setBlock(trapPos, trapState, 3);
+
+                    // Configure the block entity
+                    if (level.getBlockEntity(trapPos) instanceof SpellTrapBlockEntity trapEntity) {
+                        // Set the spell
+                        trapEntity.setSpell(spellData.getSpell().getSpellResource(), spellData.getLevel());
+
+                        // Capture and set player snapshot
+                        PlayerSnapshot snapshot = PlayerSnapshot.fromPlayer(player);
+                        trapEntity.setPlayerSnapshot(snapshot);
+                        trapEntity.setOwner(player);
+
+                        trapEntity.setChanged();
+                    }
+
+                    // Play placement sound
+                    level.playSound(null, trapPos, SoundEvents.ENCHANTMENT_TABLE_USE, SoundSource.BLOCKS, 1.0f, 1.0f);
+                }
+            }
         }
 
         return InteractionResult.sidedSuccess(level.isClientSide);

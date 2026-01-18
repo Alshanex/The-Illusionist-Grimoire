@@ -36,7 +36,7 @@ public class SpellTrapBlockEntity extends BlockEntity {
     private ResourceLocation spellId = null;
     private int spellLevel = 1;
     private int cooldownTicks = 0;
-    private int maxDetectionRange = 16;
+    private int maxDetectionRange = 5;
 
     // Player snapshot for recreating dummy entity with player stats
     private PlayerSnapshot playerSnapshot = null;
@@ -272,6 +272,13 @@ public class SpellTrapBlockEntity extends BlockEntity {
             }
         }
         return null;
+    }
+
+    public boolean isOwner(UUID entityUUID){
+        if(this.ownerUuid == null){
+            return false;
+        }
+        return this.ownerUuid.equals(entityUUID);
     }
 
     // Setters for configuration

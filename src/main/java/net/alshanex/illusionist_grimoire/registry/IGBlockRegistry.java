@@ -28,7 +28,7 @@ public class IGBlockRegistry {
 
     public static final Supplier<Block> SPELL_TRAP = BLOCKS.register("spell_trap",
             () -> new SpellTrapBlock(BlockBehaviour.Properties.of()
-                    .strength(0.3F)
+                    .strength(-1.0F, 3600000.0F)
                     .sound(SoundType.STONE)
                     .noOcclusion()
                     .lightLevel(state -> 3)));
