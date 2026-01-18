@@ -1,6 +1,7 @@
 package net.alshanex.illusionist_grimoire.setup;
 
 import net.alshanex.illusionist_grimoire.registry.IGEntityRegistry;
+import net.minecraft.client.renderer.entity.NoopRenderer;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -11,6 +12,6 @@ public class ClientSetup {
 
     @SubscribeEvent
     public static void registerRenderers(EntityRenderersEvent.RegisterRenderers event) {
-        //event.registerEntityRenderer(IGEntityRegistry.PARANOIA_HALLUCINATION.get(), ParanoiaHallucinationRenderer::new);
+        event.registerEntityRenderer(IGEntityRegistry.SPELL_TRAP_DUMMY.get(), NoopRenderer::new);
     }
 }

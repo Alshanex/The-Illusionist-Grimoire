@@ -55,6 +55,12 @@ public class IllusionistGrimoireMod {
 
         IGEntityRegistry.register(modEventBus);
 
+        IGItemRegistry.register(modEventBus);
+
+        IGCreativeTab.register(modEventBus);
+
+        IGDataAttachments.register(modEventBus);
+
         IGBlockEntityRegistry.BLOCK_ENTITIES.register(modEventBus);
 
         // Register ourselves for server and other game events we are interested in.

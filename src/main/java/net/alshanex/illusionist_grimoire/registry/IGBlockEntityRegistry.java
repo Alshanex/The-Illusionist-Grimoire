@@ -2,10 +2,13 @@ package net.alshanex.illusionist_grimoire.registry;
 
 import net.alshanex.illusionist_grimoire.IllusionistGrimoireMod;
 import net.alshanex.illusionist_grimoire.block.IllusionBlockEntity;
+import net.alshanex.illusionist_grimoire.block.SpellTrapBlockEntity;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
+
+import java.util.function.Supplier;
 
 public class IGBlockEntityRegistry {
     public static final DeferredRegister<BlockEntityType<?>> BLOCK_ENTITIES =
@@ -16,4 +19,7 @@ public class IGBlockEntityRegistry {
                     BlockEntityType.Builder.of(IllusionBlockEntity::new, IGBlockRegistry.ILLUSION_BLOCK.get())
                             .build(null)
             );
+
+    public static final Supplier<BlockEntityType<SpellTrapBlockEntity>> SPELL_TRAP = BLOCK_ENTITIES.register("spell_trap",
+            () -> BlockEntityType.Builder.of(SpellTrapBlockEntity::new, IGBlockRegistry.SPELL_TRAP.get()).build(null));
 }

@@ -28,7 +28,6 @@ import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Optional;
 
-@AutoSpellConfig
 public class DepthTrickSpell extends AbstractSpell {
     private final ResourceLocation spellId = ResourceLocation.fromNamespaceAndPath(IllusionistGrimoireMod.MODID, "depth_trick");
 
