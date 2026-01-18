@@ -9,6 +9,8 @@
 
   "itemGroup.illusionist_grimoire.main_tab": "The Illusionist Grimoire",
 
+  "item.illusionist_grimoire.magic_trap_item": "The Trapwright’s Grimoire",
+
   "spell.illusionist_grimoire.illusion_wall": "Wonderwall",
   "spell.illusionist_grimoire.illusion_wall.desc": "Creates an illusionary wall ahead of the caster for 30 seconds, making entities lose track of it.",
   "spell.illusionist_grimoire.depth_trick": "Distort",

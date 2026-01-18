@@ -4,6 +4,7 @@ import io.redspace.ironsspellbooks.api.magic.MagicData;
 import io.redspace.ironsspellbooks.api.registry.SpellRegistry;
 import io.redspace.ironsspellbooks.api.spells.AbstractSpell;
 import io.redspace.ironsspellbooks.api.spells.CastSource;
+import io.redspace.ironsspellbooks.capabilities.magic.TargetEntityCastData;
 import net.alshanex.illusionist_grimoire.entity.SpellTrapDummyEntity;
 import net.alshanex.illusionist_grimoire.registry.IGBlockEntityRegistry;
 import net.alshanex.illusionist_grimoire.registry.IGEntityRegistry;
@@ -13,8 +14,10 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.monster.Enemy;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
@@ -23,6 +26,7 @@ import net.minecraft.world.phys.Vec3;
 
 import javax.annotation.Nullable;
 import java.util.List;
+import java.util.UUID;
 
 public class SpellTrapBlockEntity extends BlockEntity {
     private ResourceLocation spellId = null;
@@ -32,6 +36,7 @@ public class SpellTrapBlockEntity extends BlockEntity {
 
     // Player snapshot for recreating dummy entity with player stats
     private PlayerSnapshot playerSnapshot = null;
+    private UUID ownerUuid = null;
 
     public SpellTrapBlockEntity(BlockPos pos, BlockState state) {
         super(IGBlockEntityRegistry.SPELL_TRAP.get(), pos, state);
@@ -98,9 +103,58 @@ public class SpellTrapBlockEntity extends BlockEntity {
         return null;
     }
 
+    public boolean isOnCooldown() {
+        return cooldownTicks > 0;
+    }
+
+    public boolean hasSpell() {
+        return spellId != null;
+    }
+
     private boolean isValidTarget(LivingEntity entity) {
-        // Only target enemies/monsters
-        return entity instanceof Enemy && entity.isAlive();
+        // Entity must be alive
+        if (!entity.isAlive()) {
+            return false;
+        }
+
+        // If no owner is set, only target enemies/monsters
+        if (ownerUuid == null) {
+            return entity instanceof Enemy;
+        }
+
+        // Get the owner player (if online)
+        if (level instanceof ServerLevel serverLevel) {
+            Player owner = serverLevel.getPlayerByUUID(ownerUuid);
+
+            if (owner != null) {
+                // Don't target the owner
+                if (entity.getUUID().equals(ownerUuid)) {
+                    return false;
+                }
+
+                // Don't target entities allied with the owner
+                if (entity.isAlliedTo(owner)) {
+                    return false;
+                }
+
+                // Don't target other players on the same team
+                if (entity instanceof Player targetPlayer) {
+                    if (owner.isAlliedTo(targetPlayer)) {
+                        return false;
+                    }
+                }
+
+                // Don't target the owner's pets/tamed entities
+                if (entity instanceof net.minecraft.world.entity.OwnableEntity ownable) {
+                    if (ownerUuid.equals(ownable.getOwnerUUID())) {
+                        return false;
+                    }
+                }
+            }
+        }
+
+        // Target everything else (hostile mobs, non-allied players, etc.)
+        return true;
     }
 
     private void castSpell(Level level, BlockPos pos, LivingEntity target, Direction facing) {
@@ -111,21 +165,22 @@ public class SpellTrapBlockEntity extends BlockEntity {
         SpellTrapDummyEntity dummyEntity = createDummyEntity(level, pos, target, facing);
         if (dummyEntity == null) return;
 
-        try {
-            // Get the MagicData from the AbstractSpellCastingMob
-            MagicData magicData = dummyEntity.getMagicData();
+        int lifeTicks = spell.getCastTime(spellLevel);
+        dummyEntity.setLifeTicks(lifeTicks);
 
-            // Cast the spell using CastSource.NONE (no mana consumption, no cooldown checks)
-            spell.onCast(level, spellLevel, dummyEntity, CastSource.NONE, magicData);
+        // Get the MagicData from the AbstractSpellCastingMob
+        MagicData magicData = dummyEntity.getMagicData();
 
-            // Set cooldown based on spell's cooldown
-            int spellCooldownSeconds = spell.getSpellCooldown();
-            this.cooldownTicks = spellCooldownSeconds * 20; // Convert to ticks
+        magicData.setAdditionalCastData(new TargetEntityCastData(target));
 
-            setChanged();
-        } finally {
-            dummyEntity.discard();
-        }
+        // Cast the spell using CastSource.NONE (no mana consumption, no cooldown checks)
+        spell.onCast(level, spellLevel, dummyEntity, CastSource.NONE, magicData);
+
+        // Set cooldown based on spell's cooldown
+        int spellCooldownSeconds = spell.getSpellCooldown();
+        this.cooldownTicks = spellCooldownSeconds * 20; // Convert to ticks
+
+        setChanged();
     }
 
     @Nullable
@@ -135,13 +190,11 @@ public class SpellTrapBlockEntity extends BlockEntity {
                 level
         );
 
-        // Position at the trap block's face
         Vec3 spawnPos = Vec3.atCenterOf(pos).add(
                 Vec3.atLowerCornerOf(facing.getNormal()).scale(0.5)
         );
         dummy.setPos(spawnPos);
 
-        // Make it look at the target
         Vec3 lookPos = target.position().add(0, target.getEyeHeight() / 2, 0);
         Vec3 direction = lookPos.subtract(spawnPos).normalize();
 
@@ -153,9 +206,14 @@ public class SpellTrapBlockEntity extends BlockEntity {
         dummy.xRotO = dummy.getXRot();
         dummy.yRotO = dummy.getYRot();
 
-        // Apply player snapshot to dummy entity
+        // Apply player snapshot to dummy entity (attributes only, no equipment)
         if (playerSnapshot != null) {
             playerSnapshot.applyToEntity(dummy);
+        }
+
+        // Set the owner so the dummy is allied to them
+        if (ownerUuid != null) {
+            dummy.setOwnerUuid(ownerUuid);
         }
 
         return dummy;
@@ -178,6 +236,16 @@ public class SpellTrapBlockEntity extends BlockEntity {
         setChanged();
     }
 
+    public void setOwner(Player player) {
+        this.ownerUuid = player.getUUID();
+        setChanged();
+    }
+
+    public void setOwner(UUID uuid, String name) {
+        this.ownerUuid = uuid;
+        setChanged();
+    }
+
     // NBT Serialization
     @Override
     protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
@@ -195,6 +263,10 @@ public class SpellTrapBlockEntity extends BlockEntity {
             playerSnapshot.save(snapshotTag);
             tag.put("PlayerSnapshot", snapshotTag);
         }
+
+        if (ownerUuid != null) {
+            tag.putUUID("OwnerUUID", ownerUuid);
+        }
     }
 
     @Override
@@ -210,6 +282,10 @@ public class SpellTrapBlockEntity extends BlockEntity {
 
         if (tag.contains("PlayerSnapshot")) {
             this.playerSnapshot = PlayerSnapshot.load(tag.getCompound("PlayerSnapshot"));
+        }
+
+        if (tag.contains("OwnerUUID")) {
+            this.ownerUuid = tag.getUUID("OwnerUUID");
         }
     }
 

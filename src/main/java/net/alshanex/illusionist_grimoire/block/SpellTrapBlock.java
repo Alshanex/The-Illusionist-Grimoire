@@ -30,12 +30,12 @@ public class SpellTrapBlock extends BaseEntityBlock {
     private static final double THICKNESS = 0.0625;
 
     // VoxelShapes for each direction (thin plate attached to face)
-    private static final VoxelShape DOWN_SHAPE = Block.box(0, 0, 0, 16, THICKNESS * 16, 16);
-    private static final VoxelShape UP_SHAPE = Block.box(0, 16 - (THICKNESS * 16), 0, 16, 16, 16);
-    private static final VoxelShape NORTH_SHAPE = Block.box(0, 0, 0, 16, 16, THICKNESS * 16);
-    private static final VoxelShape SOUTH_SHAPE = Block.box(0, 0, 16 - (THICKNESS * 16), 16, 16, 16);
-    private static final VoxelShape WEST_SHAPE = Block.box(0, 0, 0, THICKNESS * 16, 16, 16);
-    private static final VoxelShape EAST_SHAPE = Block.box(16 - (THICKNESS * 16), 0, 0, 16, 16, 16);
+    private static final VoxelShape DOWN_SHAPE = Block.box(0, 16 - THICKNESS, 0, 16, 16, 16);
+    private static final VoxelShape UP_SHAPE = Block.box(0, 0, 0, 16, THICKNESS, 16);
+    private static final VoxelShape NORTH_SHAPE = Block.box(0, 0, 16 - THICKNESS, 16, 16, 16);
+    private static final VoxelShape SOUTH_SHAPE = Block.box(0, 0, 0, 16, 16, THICKNESS);
+    private static final VoxelShape WEST_SHAPE = Block.box(16 - THICKNESS, 0, 0, 16, 16, 16);
+    private static final VoxelShape EAST_SHAPE = Block.box(0, 0, 0, THICKNESS, 16, 16);
 
     public SpellTrapBlock(Properties properties) {
         super(properties);
@@ -127,7 +127,7 @@ public class SpellTrapBlock extends BaseEntityBlock {
 
     @Override
     public RenderShape getRenderShape(BlockState state) {
-        return RenderShape.MODEL;
+        return RenderShape.INVISIBLE;
     }
 
     @Nullable

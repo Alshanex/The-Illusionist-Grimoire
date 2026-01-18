@@ -114,6 +114,7 @@ public class MagicTrapItem extends Item implements IPresetSpellContainer {
                 if (player != null) {
                     PlayerSnapshot snapshot = PlayerSnapshot.fromPlayer(player);
                     trapEntity.setPlayerSnapshot(snapshot);
+                    trapEntity.setOwner(player);
                 }
 
                 trapEntity.setChanged();
@@ -121,11 +122,6 @@ public class MagicTrapItem extends Item implements IPresetSpellContainer {
 
             // Play placement sound
             level.playSound(null, trapPos, SoundEvents.ENCHANTMENT_TABLE_USE, SoundSource.BLOCKS, 1.0f, 1.0f);
-
-            // Consume the item in survival mode
-            if (player != null && !player.isCreative()) {
-                itemStack.shrink(1);
-            }
         }
 
         return InteractionResult.sidedSuccess(level.isClientSide);
