@@ -4,6 +4,8 @@ import io.redspace.ironsspellbooks.api.magic.MagicData;
 import io.redspace.ironsspellbooks.api.registry.SpellRegistry;
 import io.redspace.ironsspellbooks.api.spells.AbstractSpell;
 import io.redspace.ironsspellbooks.api.spells.CastSource;
+import io.redspace.ironsspellbooks.capabilities.magic.SummonManager;
+import io.redspace.ironsspellbooks.capabilities.magic.SummonedEntitiesCastData;
 import io.redspace.ironsspellbooks.capabilities.magic.TargetEntityCastData;
 import net.alshanex.illusionist_grimoire.entity.SpellTrapDummyEntity;
 import net.alshanex.illusionist_grimoire.registry.IGBlockEntityRegistry;
@@ -14,6 +16,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.LivingEntity;
@@ -54,6 +57,7 @@ public class SpellTrapBlockEntity extends BlockEntity {
         if (cooldownTicks > 0) {
             cooldownTicks--;
             setChanged();
+            level.sendBlockUpdated(pos, state, state, 3);
             return;
         }
 
@@ -199,6 +203,15 @@ public class SpellTrapBlockEntity extends BlockEntity {
 
         dummyEntity.setTarget(target);
 
+        level.addFreshEntity(dummyEntity);
+
+        LivingEntity owner = getOwner(level);
+        if (owner != null) {
+            SummonedEntitiesCastData summonData = new SummonedEntitiesCastData();
+            int summonDuration = spell.getSpellCooldown() * 20; // Use spell cooldown as summon duration
+            SummonManager.initSummon(owner, dummyEntity, summonDuration, summonData);
+        }
+
         // Get the MagicData from the AbstractSpellCastingMob
         MagicData magicData = dummyEntity.getMagicData();
 
@@ -208,10 +221,10 @@ public class SpellTrapBlockEntity extends BlockEntity {
         spell.onCast(level, spellLevel, dummyEntity, CastSource.NONE, magicData);
 
         // Set cooldown based on spell's cooldown
-        int spellCooldownSeconds = spell.getSpellCooldown();
-        this.cooldownTicks = spellCooldownSeconds * 20; // Convert to ticks
+        this.cooldownTicks = spell.getSpellCooldown();
 
         setChanged();
+        level.sendBlockUpdated(pos, getBlockState(), getBlockState(), 3);
     }
 
     @Nullable
@@ -250,6 +263,17 @@ public class SpellTrapBlockEntity extends BlockEntity {
         return dummy;
     }
 
+    @Nullable
+    public LivingEntity getOwner(Level level) {
+        if (this.ownerUuid != null && level instanceof net.minecraft.server.level.ServerLevel serverLevel) {
+            Player player = serverLevel.getPlayerByUUID(this.ownerUuid);
+            if (player != null) {
+                return player;
+            }
+        }
+        return null;
+    }
+
     // Setters for configuration
     public void setSpell(ResourceLocation spellId, int spellLevel) {
         this.spellId = spellId;
@@ -275,6 +299,28 @@ public class SpellTrapBlockEntity extends BlockEntity {
     public void setOwner(UUID uuid, String name) {
         this.ownerUuid = uuid;
         setChanged();
+    }
+
+    @Override
+    public CompoundTag getUpdateTag(HolderLookup.Provider registries) {
+        CompoundTag tag = super.getUpdateTag(registries);
+        saveAdditional(tag, registries);
+        return tag;
+    }
+
+    @Override
+    public void handleUpdateTag(CompoundTag tag, HolderLookup.Provider registries) {
+        loadAdditional(tag, registries);
+    }
+
+    @Override
+    public ClientboundBlockEntityDataPacket getUpdatePacket() {
+        return ClientboundBlockEntityDataPacket.create(this);
+    }
+
+    @Override
+    public void onDataPacket(net.minecraft.network.Connection net, ClientboundBlockEntityDataPacket pkt, HolderLookup.Provider registries) {
+        handleUpdateTag(pkt.getTag(), registries);
     }
 
     // NBT Serialization

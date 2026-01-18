@@ -1,5 +1,6 @@
 package net.alshanex.illusionist_grimoire.entity;
 
+import io.redspace.ironsspellbooks.entity.mobs.IMagicSummon;
 import io.redspace.ironsspellbooks.entity.mobs.abstract_spell_casting_mob.AbstractSpellCastingMob;
 import net.minecraft.core.Holder;
 import net.minecraft.nbt.CompoundTag;
@@ -18,7 +19,7 @@ import software.bernie.geckolib.util.GeckoLibUtil;
 import javax.annotation.Nullable;
 import java.util.UUID;
 
-public class SpellTrapDummyEntity extends AbstractSpellCastingMob {
+public class SpellTrapDummyEntity extends AbstractSpellCastingMob implements IMagicSummon {
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
 
     @Nullable
@@ -176,5 +177,10 @@ public class SpellTrapDummyEntity extends AbstractSpellCastingMob {
         if(tag.contains("lifeTicks")){
             this.tickCount = tag.getInt("lifeTicks");
         }
+    }
+
+    @Override
+    public void onUnSummon() {
+
     }
 }
