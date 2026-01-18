@@ -3,6 +3,9 @@
 
   "ui.illusionist_grimoire.wall_size": "Size: %s",
 
+  "message.illusionist_grimoire.trap.no_spell_bound": "This trap has no spell bound to it!",
+  "message.illusionist_grimoire.trap.spell_not_allowed": "This spell cannot be used in traps.",
+
   "effect.illusionist_grimoire.paranoia": "Paranoia",
   "effect.illusionist_grimoire.depth_trick": "Distorted",
   "effect.illusionist_grimoire.disguised": "Disguised",

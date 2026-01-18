@@ -8,6 +8,7 @@ import io.redspace.ironsspellbooks.capabilities.magic.TargetEntityCastData;
 import net.alshanex.illusionist_grimoire.entity.SpellTrapDummyEntity;
 import net.alshanex.illusionist_grimoire.registry.IGBlockEntityRegistry;
 import net.alshanex.illusionist_grimoire.registry.IGEntityRegistry;
+import net.alshanex.illusionist_grimoire.util.ModTags;
 import net.alshanex.illusionist_grimoire.util.PlayerSnapshot;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -127,34 +128,62 @@ public class SpellTrapBlockEntity extends BlockEntity {
             Player owner = serverLevel.getPlayerByUUID(ownerUuid);
 
             if (owner != null) {
-                // Don't target the owner
-                if (entity.getUUID().equals(ownerUuid)) {
-                    return false;
-                }
+                AbstractSpell spell = SpellRegistry.getSpell(spellId);
+                if(ModTags.isSpellInTag(spell, ModTags.IS_SUPPORT_SPELL)){
+                    // Target the owner
+                    if (entity.getUUID().equals(ownerUuid)) {
+                        return true;
+                    }
 
-                // Don't target entities allied with the owner
-                if (entity.isAlliedTo(owner)) {
-                    return false;
-                }
+                    // Target entities allied with the owner
+                    if (entity.isAlliedTo(owner)) {
+                        return true;
+                    }
 
-                // Don't target other players on the same team
-                if (entity instanceof Player targetPlayer) {
-                    if (owner.isAlliedTo(targetPlayer)) {
+                    // Target other players on the same team
+                    if (entity instanceof Player targetPlayer) {
+                        if (owner.isAlliedTo(targetPlayer)) {
+                            return true;
+                        }
+                    }
+
+                    // Target the owner's pets/tamed entities
+                    if (entity instanceof net.minecraft.world.entity.OwnableEntity ownable) {
+                        if (ownerUuid.equals(ownable.getOwnerUUID())) {
+                            return true;
+                        }
+                    }
+
+                    return false;
+                } else {
+                    // Don't target the owner
+                    if (entity.getUUID().equals(ownerUuid)) {
                         return false;
                     }
-                }
 
-                // Don't target the owner's pets/tamed entities
-                if (entity instanceof net.minecraft.world.entity.OwnableEntity ownable) {
-                    if (ownerUuid.equals(ownable.getOwnerUUID())) {
+                    // Don't target entities allied with the owner
+                    if (entity.isAlliedTo(owner)) {
                         return false;
                     }
+
+                    // Don't target other players on the same team
+                    if (entity instanceof Player targetPlayer) {
+                        if (owner.isAlliedTo(targetPlayer)) {
+                            return false;
+                        }
+                    }
+
+                    // Don't target the owner's pets/tamed entities
+                    if (entity instanceof net.minecraft.world.entity.OwnableEntity ownable) {
+                        if (ownerUuid.equals(ownable.getOwnerUUID())) {
+                            return false;
+                        }
+                    }
+                    return true;
                 }
             }
         }
-
-        // Target everything else (hostile mobs, non-allied players, etc.)
-        return true;
+        return false;
     }
 
     private void castSpell(Level level, BlockPos pos, LivingEntity target, Direction facing) {
@@ -167,6 +196,8 @@ public class SpellTrapBlockEntity extends BlockEntity {
 
         int lifeTicks = spell.getCastTime(spellLevel);
         dummyEntity.setLifeTicks(lifeTicks);
+
+        dummyEntity.setTarget(target);
 
         // Get the MagicData from the AbstractSpellCastingMob
         MagicData magicData = dummyEntity.getMagicData();

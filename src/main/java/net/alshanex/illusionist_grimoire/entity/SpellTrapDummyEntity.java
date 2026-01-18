@@ -50,7 +50,7 @@ public class SpellTrapDummyEntity extends AbstractSpellCastingMob {
 
     @Override
     public void tick() {
-        if (!this.level().isClientSide && this.tickCount > this.lifeTicks) {
+        if (!this.level().isClientSide && this.tickCount > this.lifeTicks + 40) {
             this.discard();
         }
     }

@@ -1,15 +1,19 @@
 package net.alshanex.illusionist_grimoire.item;
 
+import io.redspace.ironsspellbooks.api.spells.CastType;
 import io.redspace.ironsspellbooks.api.spells.IPresetSpellContainer;
 import io.redspace.ironsspellbooks.api.spells.ISpellContainer;
 import io.redspace.ironsspellbooks.api.spells.SpellData;
 import net.alshanex.illusionist_grimoire.block.SpellTrapBlock;
 import net.alshanex.illusionist_grimoire.block.SpellTrapBlockEntity;
 import net.alshanex.illusionist_grimoire.registry.IGBlockRegistry;
+import net.alshanex.illusionist_grimoire.util.ModTags;
 import net.alshanex.illusionist_grimoire.util.PlayerSnapshot;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.protocol.game.ClientboundSetActionBarTextPacket;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionResult;
@@ -50,11 +54,11 @@ public class MagicTrapItem extends Item implements IPresetSpellContainer {
         // Check if the item has a spell
         if (!ISpellContainer.isSpellContainer(itemStack)) {
             if (player != null && !level.isClientSide) {
-                player.displayClientMessage(
-                        Component.literal("This trap has no spell bound to it!")
-                                .withStyle(style -> style.withColor(0xFF5555)),
-                        true
-                );
+                if (player instanceof ServerPlayer serverPlayer) {
+                    serverPlayer.connection.send(new ClientboundSetActionBarTextPacket(
+                            Component.translatable("message.illusionist_grimoire.trap.no_spell_bound")
+                                    .withStyle(style -> style.withColor(0xFF5555))));
+                }
             }
             return InteractionResult.FAIL;
         }
@@ -62,11 +66,11 @@ public class MagicTrapItem extends Item implements IPresetSpellContainer {
         ISpellContainer spellContainer = ISpellContainer.get(itemStack);
         if (spellContainer == null || spellContainer.isEmpty()) {
             if (player != null && !level.isClientSide) {
-                player.displayClientMessage(
-                        Component.literal("This trap has no spell bound to it!")
-                                .withStyle(style -> style.withColor(0xFF5555)),
-                        true
-                );
+                if (player instanceof ServerPlayer serverPlayer) {
+                    serverPlayer.connection.send(new ClientboundSetActionBarTextPacket(
+                            Component.translatable("message.illusionist_grimoire.trap.no_spell_bound")
+                                    .withStyle(style -> style.withColor(0xFF5555))));
+                }
             }
             return InteractionResult.FAIL;
         }
@@ -75,11 +79,22 @@ public class MagicTrapItem extends Item implements IPresetSpellContainer {
         SpellData spellData = spellContainer.getSpellAtIndex(0);
         if (spellData == null || spellData.getSpell() == null) {
             if (player != null && !level.isClientSide) {
-                player.displayClientMessage(
-                        Component.literal("This trap has no spell bound to it!")
-                                .withStyle(style -> style.withColor(0xFF5555)),
-                        true
-                );
+                if (player instanceof ServerPlayer serverPlayer) {
+                    serverPlayer.connection.send(new ClientboundSetActionBarTextPacket(
+                            Component.translatable("message.illusionist_grimoire.trap.no_spell_bound")
+                                    .withStyle(style -> style.withColor(0xFF5555))));
+                }
+            }
+            return InteractionResult.FAIL;
+        }
+
+        if(spellData.getSpell().getCastType() == CastType.CONTINUOUS || ModTags.isSpellInTag(spellData.getSpell(), ModTags.TRAP_SPELL_BLACKLIST)){
+            if (player != null && !level.isClientSide) {
+                if (player instanceof ServerPlayer serverPlayer) {
+                    serverPlayer.connection.send(new ClientboundSetActionBarTextPacket(
+                            Component.translatable("message.illusionist_grimoire.trap.spell_not_allowed")
+                                    .withStyle(style -> style.withColor(0xFF5555))));
+                }
             }
             return InteractionResult.FAIL;
         }
