@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "T": {
+      "item": "minecraft:tripwire_hook"
+    },
+    "S": {
+      "item": "irons_spellbooks:diamond_spell_book"
+    },
+    "M": {
+      "item": "irons_spellbooks:arcane_ingot"
+    },
+    "E": {
+      "item": "minecraft:emerald_block"
+    }
+  },
+  "pattern": [
+    "TET",
+    "MSM",
+    "TET"
+  ],
+  "result": {
+    "count": 1,
+    "id": "illusionist_grimoire:magic_trap_item"
+  }
+}
