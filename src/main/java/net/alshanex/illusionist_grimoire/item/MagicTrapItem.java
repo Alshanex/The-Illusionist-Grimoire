@@ -1,9 +1,12 @@
 package net.alshanex.illusionist_grimoire.item;
 
+import io.redspace.ironsspellbooks.api.magic.MagicData;
 import io.redspace.ironsspellbooks.api.spells.CastType;
 import io.redspace.ironsspellbooks.api.spells.IPresetSpellContainer;
 import io.redspace.ironsspellbooks.api.spells.ISpellContainer;
 import io.redspace.ironsspellbooks.api.spells.SpellData;
+import io.redspace.ironsspellbooks.config.ServerConfigs;
+import io.redspace.ironsspellbooks.network.SyncManaPacket;
 import net.alshanex.illusionist_grimoire.block.SpellTrapBlock;
 import net.alshanex.illusionist_grimoire.block.SpellTrapBlockEntity;
 import net.alshanex.illusionist_grimoire.registry.IGBlockRegistry;
@@ -25,6 +28,7 @@ import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.neoforged.neoforge.network.PacketDistributor;
 
 import java.util.List;
 import java.util.UUID;
@@ -137,7 +141,17 @@ public class MagicTrapItem extends Item implements IPresetSpellContainer {
                     return InteractionResult.FAIL;
                 }
 
-                if (!level.isClientSide) {
+                if (!level.isClientSide && player instanceof ServerPlayer serverPlayer) {
+                    MagicData magicData = MagicData.getPlayerMagicData(serverPlayer);
+                    double neededMana = spellData.getSpell().getManaCost(spellData.getLevel()) + 1.2;
+                    if (!(serverPlayer.isCreative() && !ServerConfigs.CREATIVE_MANA_COST.get())
+                            && magicData.getMana() < neededMana) {
+                        serverPlayer.connection.send(new ClientboundSetActionBarTextPacket(
+                                Component.translatable("message.illusionist_grimoire.trap.no_mana")
+                                        .withStyle(style -> style.withColor(0xFF5555))));
+                        return InteractionResult.FAIL;
+                    }
+
                     // Place the spell trap block
                     BlockState trapState = IGBlockRegistry.SPELL_TRAP.get().defaultBlockState()
                             .setValue(SpellTrapBlock.FACING, clickedFace);
@@ -155,6 +169,10 @@ public class MagicTrapItem extends Item implements IPresetSpellContainer {
                         trapEntity.setOwner(player);
 
                         trapEntity.setChanged();
+
+                        float newMana = (float) Math.max(magicData.getMana() - neededMana, 0);
+                        magicData.setMana(newMana);
+                        PacketDistributor.sendToPlayer(serverPlayer, new SyncManaPacket(magicData));
                     }
 
                     // Play placement sound

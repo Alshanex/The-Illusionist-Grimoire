@@ -4,7 +4,7 @@
   "compatibilityLevel": "JAVA_21",
   "refmap": "illusionist_grimoire.refmap.json",
   "mixins": [
-
+    "CounterspellSpellMixin"
   ],
   "client": [
     "ShadowRendererMixin"
