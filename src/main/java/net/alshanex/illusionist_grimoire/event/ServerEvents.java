@@ -12,6 +12,7 @@ public class ServerEvents {
     @SubscribeEvent
     public static void onStartTracking(final PlayerEvent.StartTracking event) {
         if (event.getEntity() instanceof ServerPlayer serverPlayer && event.getTarget() instanceof ServerPlayer targetPlayer) {
+            DisguiseData.getDisguiseData(targetPlayer).syncToPlayer(serverPlayer);
             DisguiseData.getDisguiseData(serverPlayer).syncToPlayer(targetPlayer);
         }
     }
