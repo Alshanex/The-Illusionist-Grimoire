@@ -7,7 +7,8 @@
     "CounterspellSpellMixin"
   ],
   "client": [
-    "ShadowRendererMixin"
+    "ShadowRendererMixin",
+    "SkipBlockRenderingMixin"
   ],
   "injectors": {
     "defaultRequire": 1

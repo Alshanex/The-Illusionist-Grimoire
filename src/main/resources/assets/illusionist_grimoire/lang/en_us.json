@@ -10,6 +10,7 @@
   "effect.illusionist_grimoire.paranoia": "Paranoia",
   "effect.illusionist_grimoire.depth_trick": "Distorted",
   "effect.illusionist_grimoire.disguised": "Disguised",
+  "effect.illusionist_grimoire.emptiness": "Emptiness",
 
   "itemGroup.illusionist_grimoire.main_tab": "The Illusionist Grimoire",
 
@@ -22,5 +23,7 @@
   "spell.illusionist_grimoire.paranoia": "Paranoia",
   "spell.illusionist_grimoire.paranoia.desc": "Casts a strong illusion on the target, making it suffer from hallucinations for some time.",
   "spell.illusionist_grimoire.disguise": "Disguise",
-  "spell.illusionist_grimoire.disguise.desc": "Casts an illusion on yourself to look like the entity you want."
+  "spell.illusionist_grimoire.disguise.desc": "Casts an illusion on yourself to look like the entity you want.",
+  "spell.illusionist_grimoire.emptiness": "Empty World",
+  "spell.illusionist_grimoire.emptiness.desc": "Casts an illusion on the target to make him see the world empty. On non player targets it will freeze them in place."
 }

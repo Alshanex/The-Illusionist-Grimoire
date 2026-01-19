@@ -20,4 +20,5 @@ public class IGEffectRegistry {
     public static final DeferredHolder<MobEffect, MobEffect> DEPTH_TRICK = MOB_EFFECT_DEFERRED_REGISTER.register("depth_trick", () -> new MagicMobEffect(MobEffectCategory.HARMFUL, 4800826));
     public static final DeferredHolder<MobEffect, MobEffect> DISGUISED = MOB_EFFECT_DEFERRED_REGISTER.register("disguised", () -> new MagicMobEffect(MobEffectCategory.BENEFICIAL, 4800826));
     public static final DeferredHolder<MobEffect, MobEffect> PARANOIA = MOB_EFFECT_DEFERRED_REGISTER.register("paranoia", () -> new ParanoiaMobEffect(MobEffectCategory.HARMFUL, 4800826));
+    public static final DeferredHolder<MobEffect, MobEffect> EMPTINESS = MOB_EFFECT_DEFERRED_REGISTER.register("emptiness", () -> new MagicMobEffect(MobEffectCategory.HARMFUL, 4800826));
 }
