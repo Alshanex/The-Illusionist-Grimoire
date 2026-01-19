@@ -1,0 +1,43 @@
+{
+	"format_version": "1.8.0",
+	"animations": {
+		"idle": {
+			"loop": true,
+			"animation_length": 6,
+			"bones": {
+				"aura1": {
+					"rotation": {
+						"0.0": {
+							"vector": [0, 0, 0]
+						},
+						"3.0": {
+							"vector": [0, -180, 0]
+						},
+						"6.0": {
+							"vector": [0, -360, 0]
+						}
+					}
+				},
+				"aura2": {
+					"rotation": {
+						"0.0": {
+							"vector": [0, 0, 0]
+						},
+						"1.5": {
+							"vector": [0, 180, 0]
+						},
+						"3.0": {
+							"vector": [0, 360, 0]
+						},
+						"4.5": {
+							"vector": [0, 540, 0]
+						},
+						"6.0": {
+							"vector": [0, 720, 0]
+						}
+					}
+				}
+			}
+		}
+	}
+}

@@ -1,0 +1,53 @@
+{
+	"format_version": "1.12.0",
+	"minecraft:geometry": [
+		{
+			"description": {
+				"identifier": "geometry.e8f3d8316f89bd90aa1c59d92f715670",
+				"texture_width": 256,
+				"texture_height": 256,
+				"visible_bounds_width": 9,
+				"visible_bounds_height": 1.5,
+				"visible_bounds_offset": [0, 0.25, 0]
+			},
+			"bones": [
+				{
+					"name": "aura1",
+					"pivot": [0, 1.5258, 0],
+					"cubes": [
+						{
+							"origin": [-7.67124, 1.50024, -7.67124],
+							"size": [15.34248, 0, 15.34248],
+							"uv": {
+								"north": {"uv": [88, 0], "uv_size": [45, 0]},
+								"east": {"uv": [88, 1], "uv_size": [45, 0]},
+								"south": {"uv": [88, 2], "uv_size": [45, 0]},
+								"west": {"uv": [88, 3], "uv_size": [45, 0]},
+								"up": {"uv": [0, 0], "uv_size": [45, 45]},
+								"down": {"uv": [0, 45], "uv_size": [45, -45]}
+							}
+						}
+					]
+				},
+				{
+					"name": "aura2",
+					"pivot": [0, 2.06585, 0],
+					"cubes": [
+						{
+							"origin": [-6.18253, 2.09835, -6.18253],
+							"size": [12.36507, 0, 12.36507],
+							"uv": {
+								"north": {"uv": [46, 84], "uv_size": [41, 0]},
+								"east": {"uv": [46, 85], "uv_size": [41, 0]},
+								"south": {"uv": [46, 86], "uv_size": [41, 0]},
+								"west": {"uv": [46, 87], "uv_size": [41, 0]},
+								"up": {"uv": [46, 0], "uv_size": [41, 41]},
+								"down": {"uv": [46, 41], "uv_size": [41, -41]}
+							}
+						}
+					]
+				}
+			]
+		}
+	]
+}
