@@ -32,52 +32,37 @@ public class SpellTrapBlockEntityRenderer extends GeoBlockRenderer<SpellTrapBloc
 
         Direction facing = blockEntity.getBlockState().getValue(SpellTrapBlock.FACING);
 
-        poseStack.pushPose();
-
         // Position and orient the model to match the voxel shape
         switch (facing) {
             case UP -> {
-                // Voxel: y=0 to y=0.0625 (bottom of block)
-                // Circle should be horizontal at the bottom
-                poseStack.translate(0.5, THICKNESS / 2.0, 0.5);
-                // No rotation - default orientation is horizontal
+                poseStack.mulPose(Axis.XP.rotationDegrees(-90));
+                poseStack.translate(0, -0.5, -0.55);
             }
             case DOWN -> {
-                // Voxel: y=15.9375 to y=16 (top of block)
-                // Circle should be horizontal at the top, facing down
-                poseStack.translate(0.5, 1.0 - THICKNESS / 2.0, 0.5);
-                poseStack.mulPose(Axis.XP.rotationDegrees(180));
+                poseStack.mulPose(Axis.XP.rotationDegrees(-90));
+                poseStack.translate(0, -0.5, 0.55);
             }
             case NORTH -> {
-                // Voxel: z=15.9375 to z=16 (far side)
-                // Circle should be vertical on north wall
-                poseStack.translate(0.5, 0.5, 1.0 - THICKNESS / 2.0);
-                poseStack.mulPose(Axis.XP.rotationDegrees(90));
+                poseStack.mulPose(Axis.YP.rotationDegrees(-180));
+                poseStack.mulPose(Axis.XP.rotationDegrees(-270));
+                poseStack.translate(-1.0, -1.05, -1.0);
             }
             case SOUTH -> {
-                // Voxel: z=0 to z=0.0625 (near side)
-                // Circle should be vertical on south wall
-                poseStack.translate(0.5, 0.5, THICKNESS / 2.0);
+                poseStack.mulPose(Axis.YP.rotationDegrees(-180));
                 poseStack.mulPose(Axis.XP.rotationDegrees(-90));
+                poseStack.translate(-1.0, -0.05, 0);
             }
             case EAST -> {
-                // Voxel: x=0 to x=0.0625 (left side)
-                // Circle should be vertical on east wall
-                poseStack.translate(THICKNESS / 2.0, 0.5, 0.5);
                 poseStack.mulPose(Axis.ZP.rotationDegrees(-90));
+                poseStack.translate(-1.0, -0.05, 0);
             }
             case WEST -> {
-                // Voxel: x=15.9375 to x=16 (right side)
-                // Circle should be vertical on west wall
-                poseStack.translate(1.0 - THICKNESS / 2.0, 0.5, 0.5);
                 poseStack.mulPose(Axis.ZP.rotationDegrees(90));
+                poseStack.translate(0, -1.05, 0);
             }
         }
 
-        // Call parent render with transformations applied
         super.render(blockEntity, partialTick, poseStack, bufferSource, packedLight, packedOverlay);
-
-        poseStack.popPose();
     }
 
     @Override
