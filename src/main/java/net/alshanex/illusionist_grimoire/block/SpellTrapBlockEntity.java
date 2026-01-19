@@ -221,7 +221,7 @@ public class SpellTrapBlockEntity extends BlockEntity {
         spell.onCast(level, spellLevel, dummyEntity, CastSource.NONE, magicData);
 
         // Set cooldown based on spell's cooldown
-        this.cooldownTicks = spell.getSpellCooldown();
+        this.cooldownTicks = spell.getSpellCooldown() * 5;
 
         setChanged();
         level.sendBlockUpdated(pos, getBlockState(), getBlockState(), 3);
