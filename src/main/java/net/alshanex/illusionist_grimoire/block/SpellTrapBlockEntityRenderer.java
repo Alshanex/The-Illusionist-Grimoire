@@ -5,11 +5,14 @@ import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
 import io.redspace.ironsspellbooks.api.registry.SpellRegistry;
 import io.redspace.ironsspellbooks.api.spells.AbstractSpell;
+import io.redspace.ironsspellbooks.registries.MobEffectRegistry;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 import org.joml.Vector3f;
 import software.bernie.geckolib.cache.object.BakedGeoModel;
@@ -63,6 +66,31 @@ public class SpellTrapBlockEntityRenderer extends GeoBlockRenderer<SpellTrapBloc
         }
 
         super.render(blockEntity, partialTick, poseStack, bufferSource, packedLight, packedOverlay);
+    }
+
+    @Override
+    public boolean shouldRender(SpellTrapBlockEntity blockEntity, Vec3 cameraPos) {
+        // Always render if on cooldown
+        if (blockEntity.isOnCooldown()) {
+            return true;
+        }
+
+        Minecraft mc = Minecraft.getInstance();
+        Player player = mc.player;
+
+        if (player == null) {
+            return false;
+        }
+
+        if (blockEntity.isOwner(player.getUUID())) {
+            return true;
+        }
+
+        if (player.hasEffect(MobEffectRegistry.PLANAR_SIGHT)) {
+            return true;
+        }
+
+        return false;
     }
 
     @Override
