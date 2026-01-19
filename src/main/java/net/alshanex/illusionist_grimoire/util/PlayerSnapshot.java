@@ -32,8 +32,6 @@ public class PlayerSnapshot {
 
         // Capture spell power attributes from Iron Spells
         snapshot.captureAttribute(player, AttributeRegistry.SPELL_POWER);
-        snapshot.captureAttribute(player, AttributeRegistry.COOLDOWN_REDUCTION);
-        snapshot.captureAttribute(player, AttributeRegistry.CAST_TIME_REDUCTION);
 
         // Capture school-specific spell powers
         snapshot.captureAttribute(player, AttributeRegistry.FIRE_SPELL_POWER);
@@ -45,9 +43,6 @@ public class PlayerSnapshot {
         snapshot.captureAttribute(player, AttributeRegistry.EVOCATION_SPELL_POWER);
         snapshot.captureAttribute(player, AttributeRegistry.NATURE_SPELL_POWER);
         snapshot.captureAttribute(player, AttributeRegistry.ELDRITCH_SPELL_POWER);
-
-        // Capture summon damage for summoning spells
-        snapshot.captureAttribute(player, AttributeRegistry.SUMMON_DAMAGE);
 
         return snapshot;
     }
@@ -64,8 +59,6 @@ public class PlayerSnapshot {
     public void applyToEntity(SpellTrapDummyEntity entity) {
         // Apply spell power attributes
         applyHolderAttribute(entity, AttributeRegistry.SPELL_POWER);
-        applyHolderAttribute(entity, AttributeRegistry.COOLDOWN_REDUCTION);
-        applyHolderAttribute(entity, AttributeRegistry.CAST_TIME_REDUCTION);
 
         // Apply school-specific powers
         applyHolderAttribute(entity, AttributeRegistry.FIRE_SPELL_POWER);
@@ -77,8 +70,6 @@ public class PlayerSnapshot {
         applyHolderAttribute(entity, AttributeRegistry.EVOCATION_SPELL_POWER);
         applyHolderAttribute(entity, AttributeRegistry.NATURE_SPELL_POWER);
         applyHolderAttribute(entity, AttributeRegistry.ELDRITCH_SPELL_POWER);
-
-        applyHolderAttribute(entity, AttributeRegistry.SUMMON_DAMAGE);
     }
 
     private void applyHolderAttribute(SpellTrapDummyEntity entity, Holder<Attribute> attributeHolder) {
