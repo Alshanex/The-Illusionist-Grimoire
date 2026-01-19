@@ -18,6 +18,7 @@ import software.bernie.geckolib.renderer.layer.AutoGlowingGeoLayer;
 import software.bernie.geckolib.util.Color;
 
 public class SpellTrapBlockEntityRenderer extends GeoBlockRenderer<SpellTrapBlockEntity> {
+    private static final double THICKNESS = 0.0625;
 
     public SpellTrapBlockEntityRenderer(BlockEntityRendererProvider.Context context) {
         super(new MagicCircleModel());
@@ -26,52 +27,57 @@ public class SpellTrapBlockEntityRenderer extends GeoBlockRenderer<SpellTrapBloc
     }
 
     @Override
-    public void preRender(PoseStack poseStack, SpellTrapBlockEntity blockEntity,
-                          BakedGeoModel model, MultiBufferSource bufferSource,
-                          com.mojang.blaze3d.vertex.VertexConsumer buffer,
-                          boolean isReRender, float partialTick, int packedLight,
-                          int packedOverlay, int color) {
-        super.preRender(poseStack, blockEntity, model, bufferSource, buffer,
-                isReRender, partialTick, packedLight, packedOverlay, color);
+    public void render(SpellTrapBlockEntity blockEntity, float partialTick, PoseStack poseStack,
+                       MultiBufferSource bufferSource, int packedLight, int packedOverlay) {
 
         Direction facing = blockEntity.getBlockState().getValue(SpellTrapBlock.FACING);
 
-        // Move to center of block
-        poseStack.translate(0.5, 0.5, 0.5);
+        poseStack.pushPose();
 
-        // Apply rotation based on facing direction
+        // Position and orient the model to match the voxel shape
         switch (facing) {
             case UP -> {
-                // Default orientation (circle facing up)
-                // No rotation needed
+                // Voxel: y=0 to y=0.0625 (bottom of block)
+                // Circle should be horizontal at the bottom
+                poseStack.translate(0.5, THICKNESS / 2.0, 0.5);
+                // No rotation - default orientation is horizontal
             }
             case DOWN -> {
-                // Flip upside down
+                // Voxel: y=15.9375 to y=16 (top of block)
+                // Circle should be horizontal at the top, facing down
+                poseStack.translate(0.5, 1.0 - THICKNESS / 2.0, 0.5);
                 poseStack.mulPose(Axis.XP.rotationDegrees(180));
             }
             case NORTH -> {
-                // Rotate to face north (rotate around X axis)
+                // Voxel: z=15.9375 to z=16 (far side)
+                // Circle should be vertical on north wall
+                poseStack.translate(0.5, 0.5, 1.0 - THICKNESS / 2.0);
                 poseStack.mulPose(Axis.XP.rotationDegrees(90));
-                poseStack.mulPose(Axis.YP.rotationDegrees(180));
             }
             case SOUTH -> {
-                // Rotate to face south
-                poseStack.mulPose(Axis.XP.rotationDegrees(90));
+                // Voxel: z=0 to z=0.0625 (near side)
+                // Circle should be vertical on south wall
+                poseStack.translate(0.5, 0.5, THICKNESS / 2.0);
+                poseStack.mulPose(Axis.XP.rotationDegrees(-90));
             }
             case EAST -> {
-                // Rotate to face east
-                poseStack.mulPose(Axis.ZP.rotationDegrees(90));
-                poseStack.mulPose(Axis.YP.rotationDegrees(90));
+                // Voxel: x=0 to x=0.0625 (left side)
+                // Circle should be vertical on east wall
+                poseStack.translate(THICKNESS / 2.0, 0.5, 0.5);
+                poseStack.mulPose(Axis.ZP.rotationDegrees(-90));
             }
             case WEST -> {
-                // Rotate to face west
-                poseStack.mulPose(Axis.ZP.rotationDegrees(-90));
-                poseStack.mulPose(Axis.YP.rotationDegrees(-90));
+                // Voxel: x=15.9375 to x=16 (right side)
+                // Circle should be vertical on west wall
+                poseStack.translate(1.0 - THICKNESS / 2.0, 0.5, 0.5);
+                poseStack.mulPose(Axis.ZP.rotationDegrees(90));
             }
         }
 
-        // Move back and slightly offset from the block face
-        poseStack.translate(-0.5, -0.48, -0.5);
+        // Call parent render with transformations applied
+        super.render(blockEntity, partialTick, poseStack, bufferSource, packedLight, packedOverlay);
+
+        poseStack.popPose();
     }
 
     @Override
