@@ -3,6 +3,7 @@ package net.alshanex.illusionist_grimoire.event;
 import net.alshanex.illusionist_grimoire.IllusionistGrimoireMod;
 import net.alshanex.illusionist_grimoire.data.IGClientData;
 import net.alshanex.illusionist_grimoire.registry.IGEffectRegistry;
+import net.minecraft.client.CameraType;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.EntityModel;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -14,6 +15,7 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.RenderLivingEvent;
+import net.neoforged.neoforge.client.event.RenderPlayerEvent;
 
 import java.util.Arrays;
 
@@ -44,6 +46,18 @@ public class ClientEvents {
 				Minecraft.getInstance().getEntityRenderDispatcher().getRenderer(e).render(e, living.yBodyRot, event.getPartialTick(), event.getPoseStack(), event.getMultiBufferSource(), event.getPackedLight());
 				event.setCanceled(true);
 			}
+		}
+	}
+
+	@SubscribeEvent
+	public static void onRenderPlayer(RenderPlayerEvent.Pre event) {
+		Player player = event.getEntity();
+		Minecraft mc = Minecraft.getInstance();
+
+		if (player == mc.player
+				&& mc.options.getCameraType() == CameraType.FIRST_PERSON
+				&& player.hasEffect(IGEffectRegistry.DISGUISED)) {
+			event.setCanceled(true);
 		}
 	}
 }
