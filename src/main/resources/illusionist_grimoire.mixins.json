@@ -4,7 +4,9 @@
   "compatibilityLevel": "JAVA_21",
   "refmap": "illusionist_grimoire.refmap.json",
   "mixins": [
-    "CounterspellSpellMixin"
+    "CounterspellSpellMixin",
+    "ArcaneAnvilMenuMixin",
+    "ItemCombinerMenuAccessor"
   ],
   "client": [
     "ShadowRendererMixin",
