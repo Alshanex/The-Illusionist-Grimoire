@@ -1,91 +1,104 @@
 package net.alshanex.illusionist_grimoire.block;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
+import com.mojang.math.Axis;
+import io.redspace.ironsspellbooks.api.registry.SpellRegistry;
+import io.redspace.ironsspellbooks.api.spells.AbstractSpell;
 import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.core.Direction;
-import net.minecraft.core.particles.ParticleTypes;
-import net.minecraft.util.Mth;
-import net.minecraft.world.level.Level;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.phys.Vec3;
+import org.joml.Vector3f;
+import software.bernie.geckolib.cache.object.BakedGeoModel;
+import software.bernie.geckolib.renderer.GeoBlockRenderer;
+import software.bernie.geckolib.renderer.layer.AutoGlowingGeoLayer;
 
-public class SpellTrapBlockEntityRenderer implements BlockEntityRenderer<SpellTrapBlockEntity> {
-    private static final float CIRCLE_RADIUS = 0.5f;
+public class SpellTrapBlockEntityRenderer extends GeoBlockRenderer<SpellTrapBlockEntity> {
 
     public SpellTrapBlockEntityRenderer(BlockEntityRendererProvider.Context context) {
+        super(new MagicCircleModel());
+        addRenderLayer(new AutoGlowingGeoLayer<>(this));
     }
 
     @Override
-    public void render(SpellTrapBlockEntity blockEntity, float partialTick, PoseStack poseStack,
-                       MultiBufferSource bufferSource, int packedLight, int packedOverlay) {
+    public void scaleModelForRender(float widthScale, float heightScale, PoseStack poseStack, SpellTrapBlockEntity animatable, BakedGeoModel model, boolean isReRender, float partialTick, int packedLight, int packedOverlay) {
+        Direction facing = animatable.getBlockState().getValue(SpellTrapBlock.FACING);
 
-        // Only render when not on cooldown and has a spell
-        if (blockEntity.isOnCooldown()) {
-            return;
-        }
-
-        Level level = blockEntity.getLevel();
-        if (level == null) return;
-
-        Direction facing = blockEntity.getBlockState().getValue(SpellTrapBlock.FACING);
-
-        // Get the center position of the trap (slightly offset from the wall)
-        Vec3 center = Vec3.atCenterOf(blockEntity.getBlockPos()).add(
-                Vec3.atLowerCornerOf(facing.getNormal()).scale(0.01)
-        );
-
-        // Animation time
-        long gameTime = level.getGameTime();
-        float time = gameTime + partialTick;
-
-        // Rotation speeds
-        float outerRotation = (time * 2.0f) % 360.0f;
-        float innerRotation = (time * 3.0f) % 360.0f;
-
-        // Spawn outer circle particles
-        int outerParticles = 3;
-        for (int i = 0; i < outerParticles; i++) {
-            float angle = (float) Math.toRadians((360.0f / outerParticles * i) + outerRotation);
-            Vec3 particlePos = getCirclePosition(center, angle, CIRCLE_RADIUS, facing);
-
-            if (level.random.nextFloat() < 0.4f) {
-                level.addParticle(ParticleTypes.END_ROD,
-                        particlePos.x, particlePos.y, particlePos.z,
-                        0, 0, 0);
+        // Rotate based on facing direction
+        switch (facing) {
+            case UP -> {
+                // No rotation needed (default is horizontal)
+            }
+            case DOWN -> {
+                poseStack.mulPose(Axis.XP.rotationDegrees(180));
+            }
+            case NORTH -> {
+                poseStack.mulPose(Axis.XP.rotationDegrees(90));
+            }
+            case SOUTH -> {
+                poseStack.mulPose(Axis.XP.rotationDegrees(-90));
+            }
+            case EAST -> {
+                poseStack.mulPose(Axis.ZP.rotationDegrees(90));
+            }
+            case WEST -> {
+                poseStack.mulPose(Axis.ZP.rotationDegrees(-90));
             }
         }
-
-        // Spawn inner circle particles
-        int innerParticles = 2;
-        for (int i = 0; i < innerParticles; i++) {
-            float angle = (float) Math.toRadians((360.0f / innerParticles * i) + innerRotation);
-            Vec3 particlePos = getCirclePosition(center, angle, CIRCLE_RADIUS * 0.4f, facing);
-
-            if (level.random.nextFloat() < 0.4f) {
-                level.addParticle(ParticleTypes.END_ROD,
-                        particlePos.x, particlePos.y, particlePos.z,
-                        0, 0, 0);
-            }
-        }
+        super.scaleModelForRender(widthScale, heightScale, poseStack, animatable, model, isReRender, partialTick, packedLight, packedOverlay);
     }
 
-    private Vec3 getCirclePosition(Vec3 center, float angle, float radius, Direction facing) {
-        float x = Mth.cos(angle) * radius;
-        float y = Mth.sin(angle) * radius;
+    @Override
+    public RenderType getRenderType(SpellTrapBlockEntity animatable, ResourceLocation texture,
+                                    MultiBufferSource bufferSource, float partialTick) {
+        return RenderType.entityTranslucent(texture);
+    }
 
-        // Rotate the circle to be perpendicular to the facing direction
-        return switch (facing) {
-            case UP, DOWN ->
-                // Circle on XZ plane (horizontal)
-                    new Vec3(center.x + x, center.y, center.z + y);
-            case NORTH, SOUTH ->
-                // Circle on XY plane (vertical, north-south facing)
-                    new Vec3(center.x + x, center.y + y, center.z);
-            case EAST, WEST ->
-                // Circle on YZ plane (vertical, east-west facing)
-                    new Vec3(center.x, center.y + y, center.z + x);
-        };
+    @Override
+    public int getPackedOverlay(SpellTrapBlockEntity animatable, float u, float partialTick) {
+        // No overlay tinting
+        return 0;
+    }
+
+    @Override
+    public void actuallyRender(PoseStack poseStack, SpellTrapBlockEntity blockEntity,
+                               BakedGeoModel model, RenderType renderType,
+                               MultiBufferSource bufferSource, VertexConsumer buffer,
+                               boolean isReRender, float partialTick, int packedLight,
+                               int packedOverlay, int renderColor) {
+
+        // Get spell school color for tinting
+        int tintColor = getSpellSchoolColor(blockEntity);
+
+        // Call parent render with custom color (OVERRIDE the renderColor parameter)
+        super.actuallyRender(poseStack, blockEntity, model, renderType, bufferSource,
+                buffer, isReRender, partialTick, packedLight, packedOverlay, tintColor);
+    }
+
+    private int getSpellSchoolColor(SpellTrapBlockEntity blockEntity) {
+        ResourceLocation spellId = blockEntity.getSpellId(); // Add this getter if missing
+        if (spellId == null) {
+            return 0xFFFFFFFF; // White if no spell
+        }
+
+        AbstractSpell spell = SpellRegistry.getSpell(spellId);
+        if (spell == null) {
+            return 0xFFFFFFFF; // White if spell not found
+        }
+
+        // Get the targeting color as Vector3f (RGB values 0.0-1.0)
+        Vector3f color = spell.getSchoolType().getTargetingColor();
+
+        // Convert Vector3f to ARGB integer
+        int r = Math.min(255, Math.max(0, (int)(color.x * 255)));
+        int g = Math.min(255, Math.max(0, (int)(color.y * 255)));
+        int b = Math.min(255, Math.max(0, (int)(color.z * 255)));
+
+        // Return as ARGB with full opacity
+        return 0xFF000000 | (r << 16) | (g << 8) | b;
     }
 
     @Override

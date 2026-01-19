@@ -27,12 +27,17 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
+import org.joml.Vector3f;
+import software.bernie.geckolib.animatable.GeoBlockEntity;
+import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
+import software.bernie.geckolib.animation.*;
+import software.bernie.geckolib.util.GeckoLibUtil;
 
 import javax.annotation.Nullable;
 import java.util.List;
 import java.util.UUID;
 
-public class SpellTrapBlockEntity extends BlockEntity {
+public class SpellTrapBlockEntity extends BlockEntity implements GeoBlockEntity {
     private ResourceLocation spellId = null;
     private int spellLevel = 1;
     private int cooldownTicks = 0;
@@ -375,5 +380,29 @@ public class SpellTrapBlockEntity extends BlockEntity {
 
     public void drops() {
 
+    }
+
+    public ResourceLocation getSpellId(){
+        return this.spellId;
+    }
+
+    // Geckolib animations
+    private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
+
+    protected final RawAnimation idle = RawAnimation.begin().thenLoop("idle");
+
+    @Override
+    public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
+        controllers.add(new AnimationController(this, "idle", 0, this::idlePredicate));
+    }
+
+    protected PlayState idlePredicate(AnimationState event) {
+        event.getController().setAnimation(idle);
+        return PlayState.CONTINUE;
+    }
+
+    @Override
+    public AnimatableInstanceCache getAnimatableInstanceCache() {
+        return cache;
     }
 }
