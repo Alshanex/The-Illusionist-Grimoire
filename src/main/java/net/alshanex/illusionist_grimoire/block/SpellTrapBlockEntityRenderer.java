@@ -15,90 +15,76 @@ import org.joml.Vector3f;
 import software.bernie.geckolib.cache.object.BakedGeoModel;
 import software.bernie.geckolib.renderer.GeoBlockRenderer;
 import software.bernie.geckolib.renderer.layer.AutoGlowingGeoLayer;
+import software.bernie.geckolib.util.Color;
 
 public class SpellTrapBlockEntityRenderer extends GeoBlockRenderer<SpellTrapBlockEntity> {
 
     public SpellTrapBlockEntityRenderer(BlockEntityRendererProvider.Context context) {
         super(new MagicCircleModel());
+        // Add glowing layer
         addRenderLayer(new AutoGlowingGeoLayer<>(this));
     }
 
     @Override
-    public void scaleModelForRender(float widthScale, float heightScale, PoseStack poseStack, SpellTrapBlockEntity animatable, BakedGeoModel model, boolean isReRender, float partialTick, int packedLight, int packedOverlay) {
-        Direction facing = animatable.getBlockState().getValue(SpellTrapBlock.FACING);
+    public void preRender(PoseStack poseStack, SpellTrapBlockEntity blockEntity,
+                          BakedGeoModel model, MultiBufferSource bufferSource,
+                          com.mojang.blaze3d.vertex.VertexConsumer buffer,
+                          boolean isReRender, float partialTick, int packedLight,
+                          int packedOverlay, int color) {
+        super.preRender(poseStack, blockEntity, model, bufferSource, buffer,
+                isReRender, partialTick, packedLight, packedOverlay, color);
 
-        // Rotate based on facing direction
+        Direction facing = blockEntity.getBlockState().getValue(SpellTrapBlock.FACING);
+
+        // Move to center of block
+        poseStack.translate(0.5, 0.5, 0.5);
+
+        // Apply rotation based on facing direction
         switch (facing) {
             case UP -> {
-                // No rotation needed (default is horizontal)
+                // Default orientation (circle facing up)
+                // No rotation needed
             }
             case DOWN -> {
+                // Flip upside down
                 poseStack.mulPose(Axis.XP.rotationDegrees(180));
             }
             case NORTH -> {
+                // Rotate to face north (rotate around X axis)
                 poseStack.mulPose(Axis.XP.rotationDegrees(90));
+                poseStack.mulPose(Axis.YP.rotationDegrees(180));
             }
             case SOUTH -> {
-                poseStack.mulPose(Axis.XP.rotationDegrees(-90));
+                // Rotate to face south
+                poseStack.mulPose(Axis.XP.rotationDegrees(90));
             }
             case EAST -> {
+                // Rotate to face east
                 poseStack.mulPose(Axis.ZP.rotationDegrees(90));
+                poseStack.mulPose(Axis.YP.rotationDegrees(90));
             }
             case WEST -> {
+                // Rotate to face west
                 poseStack.mulPose(Axis.ZP.rotationDegrees(-90));
+                poseStack.mulPose(Axis.YP.rotationDegrees(-90));
             }
         }
-        super.scaleModelForRender(widthScale, heightScale, poseStack, animatable, model, isReRender, partialTick, packedLight, packedOverlay);
+
+        // Move back and slightly offset from the block face
+        poseStack.translate(-0.5, -0.48, -0.5);
+    }
+
+    @Override
+    public Color getRenderColor(SpellTrapBlockEntity blockEntity, float partialTick, int packedLight) {
+        Vector3f color = blockEntity.getSpellColor();
+
+        return Color.ofRGB(color.x, color.y, color.z);
     }
 
     @Override
     public RenderType getRenderType(SpellTrapBlockEntity animatable, ResourceLocation texture,
                                     MultiBufferSource bufferSource, float partialTick) {
         return RenderType.entityTranslucent(texture);
-    }
-
-    @Override
-    public int getPackedOverlay(SpellTrapBlockEntity animatable, float u, float partialTick) {
-        // No overlay tinting
-        return 0;
-    }
-
-    @Override
-    public void actuallyRender(PoseStack poseStack, SpellTrapBlockEntity blockEntity,
-                               BakedGeoModel model, RenderType renderType,
-                               MultiBufferSource bufferSource, VertexConsumer buffer,
-                               boolean isReRender, float partialTick, int packedLight,
-                               int packedOverlay, int renderColor) {
-
-        // Get spell school color for tinting
-        int tintColor = getSpellSchoolColor(blockEntity);
-
-        // Call parent render with custom color (OVERRIDE the renderColor parameter)
-        super.actuallyRender(poseStack, blockEntity, model, renderType, bufferSource,
-                buffer, isReRender, partialTick, packedLight, packedOverlay, tintColor);
-    }
-
-    private int getSpellSchoolColor(SpellTrapBlockEntity blockEntity) {
-        ResourceLocation spellId = blockEntity.getSpellId(); // Add this getter if missing
-        if (spellId == null) {
-            return 0xFFFFFFFF; // White if no spell
-        }
-
-        AbstractSpell spell = SpellRegistry.getSpell(spellId);
-        if (spell == null) {
-            return 0xFFFFFFFF; // White if spell not found
-        }
-
-        // Get the targeting color as Vector3f (RGB values 0.0-1.0)
-        Vector3f color = spell.getSchoolType().getTargetingColor();
-
-        // Convert Vector3f to ARGB integer
-        int r = Math.min(255, Math.max(0, (int)(color.x * 255)));
-        int g = Math.min(255, Math.max(0, (int)(color.y * 255)));
-        int b = Math.min(255, Math.max(0, (int)(color.z * 255)));
-
-        // Return as ARGB with full opacity
-        return 0xFF000000 | (r << 16) | (g << 8) | b;
     }
 
     @Override

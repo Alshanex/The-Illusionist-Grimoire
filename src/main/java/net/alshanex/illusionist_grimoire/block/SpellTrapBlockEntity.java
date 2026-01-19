@@ -386,6 +386,19 @@ public class SpellTrapBlockEntity extends BlockEntity implements GeoBlockEntity 
         return this.spellId;
     }
 
+    public Vector3f getSpellColor() {
+        if (spellId == null) {
+            return new Vector3f(1.0f, 1.0f, 1.0f); // White
+        }
+
+        AbstractSpell spell = SpellRegistry.getSpell(spellId);
+        if (spell == null) {
+            return new Vector3f(1.0f, 1.0f, 1.0f); // White
+        }
+
+        return spell.getSchoolType().getTargetingColor();
+    }
+
     // Geckolib animations
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
 
