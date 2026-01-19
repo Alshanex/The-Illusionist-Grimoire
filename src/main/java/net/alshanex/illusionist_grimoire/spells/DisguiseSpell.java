@@ -21,6 +21,7 @@ import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 
 import java.util.List;
@@ -96,7 +97,17 @@ public class DisguiseSpell extends AbstractSpell {
     @Override
     public void onCast(Level level, int spellLevel, LivingEntity entity, CastSource castSource, MagicData playerMagicData) {
         if (playerMagicData.getAdditionalCastData() instanceof TargetEntityCastData target && level instanceof ServerLevel server && target.getTarget(server)!=null) {
-            DisguiseData.getDisguiseData(entity).setShapeshiftId(BuiltInRegistries.ENTITY_TYPE.getKey(target.getTarget(server).getType()));
+            LivingEntity targetEntity = target.getTarget(server);
+            DisguiseData disguiseData = DisguiseData.getDisguiseData(entity);
+
+            disguiseData.setShapeshiftId(BuiltInRegistries.ENTITY_TYPE.getKey(targetEntity.getType()));
+
+            if (targetEntity instanceof Player targetPlayer) {
+                disguiseData.setDisguisedPlayer(targetPlayer);
+            } else {
+                disguiseData.setDisguisedPlayer(null); // Clear player data if not a player
+            }
+
             entity.addEffect(new MobEffectInstance(IGEffectRegistry.DISGUISED, getDuration(spellLevel, entity), 0, false, false, true));
         }
         super.onCast(level, spellLevel, entity, castSource, playerMagicData);
