@@ -19,7 +19,7 @@ public class IGEntityRegistry {
             ENTITY_TYPES.register("spell_trap_dummy", () -> EntityType.Builder.of(
                             SpellTrapDummyEntity::new,
                             MobCategory.MISC)
-                    .sized(0.5f, 0.5f)
+                    .sized(0.1f, 0.1f)
                     .clientTrackingRange(0)
                     .updateInterval(Integer.MAX_VALUE)
                     .build(ResourceLocation.fromNamespaceAndPath(IllusionistGrimoireMod.MODID, "spell_trap_dummy").toString()));

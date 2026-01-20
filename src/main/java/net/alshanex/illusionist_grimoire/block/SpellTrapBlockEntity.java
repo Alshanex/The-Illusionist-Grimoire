@@ -41,7 +41,7 @@ public class SpellTrapBlockEntity extends BlockEntity implements GeoBlockEntity 
     private ResourceLocation spellId = null;
     private int spellLevel = 1;
     private int cooldownTicks = 0;
-    private int maxDetectionRange = 5;
+    private int maxDetectionRange = 10;
 
     // Player snapshot for recreating dummy entity with player stats
     private PlayerSnapshot playerSnapshot = null;
@@ -262,9 +262,7 @@ public class SpellTrapBlockEntity extends BlockEntity implements GeoBlockEntity 
                 level
         );
 
-        Vec3 spawnPos = Vec3.atCenterOf(pos).add(
-                Vec3.atLowerCornerOf(facing.getNormal()).scale(0.5)
-        );
+        Vec3 spawnPos = Vec3.atCenterOf(pos);
         dummy.setPos(spawnPos);
 
         Vec3 lookPos = target.position().add(0, target.getEyeHeight() / 2, 0);
