@@ -6,7 +6,9 @@
   "mixins": [
     "CounterspellSpellMixin",
     "ArcaneAnvilMenuMixin",
-    "ItemCombinerMenuAccessor"
+    "ItemCombinerMenuAccessor",
+    "EntityAllianceMixin",
+    "ProjectileMixin"
   ],
   "client": [
     "ShadowRendererMixin",
