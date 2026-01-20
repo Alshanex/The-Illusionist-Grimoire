@@ -1,5 +1,6 @@
 package net.alshanex.illusionist_grimoire.mixin;
 
+import io.redspace.ironsspellbooks.entity.spells.gust.GustCollider;
 import net.alshanex.illusionist_grimoire.entity.SpellTrapDummyEntity;
 import net.alshanex.illusionist_grimoire.event.SpellTrapOwnershipHandler;
 import net.minecraft.server.level.ServerLevel;
@@ -16,18 +17,22 @@ import java.util.UUID;
 
 @Mixin(Projectile.class)
 public abstract class ProjectileMixin {
-    /**
-     * Override getOwner() to return the trap owner instead of the dummy entity
-     */
+
     @Inject(method = "getOwner", at = @At("RETURN"), cancellable = true)
     private void getTrapOwnerInstead(CallbackInfoReturnable<Entity> cir) {
+        Projectile self = (Projectile)(Object)this;
+
+        if (self instanceof GustCollider && self.tickCount < 2) {
+            return; // Use the original owner (dummy) during initialization
+        }
+
         Entity originalOwner = cir.getReturnValue();
 
         // If the original owner is a SpellTrapDummyEntity, return the trap owner instead
         if (originalOwner instanceof SpellTrapDummyEntity dummy) {
             UUID trapOwnerUuid = dummy.getOwnerUuid();
             if (trapOwnerUuid != null) {
-                Projectile self = (Projectile)(Object)this;
+                self = (Projectile)(Object)this;
                 if (self.level() instanceof ServerLevel serverLevel) {
                     Player trapOwner = serverLevel.getServer().getPlayerList().getPlayer(trapOwnerUuid);
                     if (trapOwner != null) {
@@ -40,7 +45,7 @@ public abstract class ProjectileMixin {
 
         // If original owner is null or removed, check if we have a stored trap owner
         if (originalOwner == null || originalOwner.isRemoved()) {
-            Projectile self = (Projectile)(Object)this;
+            self = (Projectile)(Object)this;
             UUID trapOwnerUuid = SpellTrapOwnershipHandler.getTrapOwnerUuid(self);
 
             if (trapOwnerUuid != null && self.level() instanceof ServerLevel serverLevel) {

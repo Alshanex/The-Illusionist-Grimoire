@@ -85,32 +85,55 @@ public class SpellTrapBlockEntity extends BlockEntity implements GeoBlockEntity 
 
     @Nullable
     private LivingEntity findTargetInLine(Level level, BlockPos pos, Direction facing) {
-        BlockPos currentPos = pos.relative(facing); // Start one block away from trap
+        Vec3 start = Vec3.atCenterOf(pos).add(Vec3.atLowerCornerOf(facing.getNormal()).scale(0.5));
+        Vec3 directionVec = Vec3.atLowerCornerOf(facing.getNormal());
+        Vec3 end = start.add(directionVec.scale(maxDetectionRange));
 
-        for (int i = 0; i < maxDetectionRange; i++) {
-            BlockState blockState = level.getBlockState(currentPos);
+        // Create a thin AABB along the entire detection line
+        AABB detectionBox = new AABB(start, end).inflate(0.4);
 
-            // Check if we hit a solid block - stop raycast
-            if (!blockState.isAir() && blockState.isSolidRender(level, currentPos)) {
-                break;
-            }
+        List<LivingEntity> entities = level.getEntitiesOfClass(
+                LivingEntity.class,
+                detectionBox,
+                this::isValidTarget
+        );
 
-            // Check for entities in this block position
-            AABB searchBox = new AABB(currentPos);
-            List<LivingEntity> entities = level.getEntitiesOfClass(
-                    LivingEntity.class,
-                    searchBox,
-                    this::isValidTarget
-            );
-
-            if (!entities.isEmpty()) {
-                return entities.get(0); // Return first found entity
-            }
-
-            currentPos = currentPos.relative(facing); // Move to next block
+        if (entities.isEmpty()) {
+            return null;
         }
 
-        return null;
+        // Find the closest valid entity that has line of sight (no blocks in the way)
+        LivingEntity closest = null;
+        double closestDist = Double.MAX_VALUE;
+
+        for (LivingEntity entity : entities) {
+            Vec3 entityPos = entity.position().add(0, entity.getBbHeight() / 2, 0);
+            double dist = start.distanceTo(entityPos);
+
+            if (dist < closestDist && hasLineOfSight(level, start, entityPos, facing)) {
+                closest = entity;
+                closestDist = dist;
+            }
+        }
+
+        return closest;
+    }
+
+    private boolean hasLineOfSight(Level level, Vec3 start, Vec3 target, Direction facing) {
+        Vec3 direction = Vec3.atLowerCornerOf(facing.getNormal());
+        double distance = start.distanceTo(target);
+
+        // Check blocks along the path
+        for (double d = 0; d < distance; d += 0.5) {
+            Vec3 checkPos = start.add(direction.scale(d));
+            BlockPos blockPos = BlockPos.containing(checkPos);
+            BlockState state = level.getBlockState(blockPos);
+
+            if (!state.isAir() && state.isSolidRender(level, blockPos)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     public boolean isOnCooldown() {
