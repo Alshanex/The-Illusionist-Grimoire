@@ -25,4 +25,5 @@ public class IGSpellRegistry {
     public static final Supplier<AbstractSpell> PARANOIA = registerSpell(new ParanoiaSpell());
     public static final Supplier<AbstractSpell> DISGUISE = registerSpell(new DisguiseSpell());
     public static final Supplier<AbstractSpell> EMPTINESS = registerSpell(new EmptinessSpell());
+    public static final Supplier<AbstractSpell> FEAR_BOLT_SPELL = registerSpell(new FearProjectileSpell());
 }

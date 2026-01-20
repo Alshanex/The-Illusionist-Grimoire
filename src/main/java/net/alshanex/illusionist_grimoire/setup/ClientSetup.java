@@ -18,5 +18,7 @@ public class ClientSetup {
                 IGBlockEntityRegistry.SPELL_TRAP.get(),
                 SpellTrapBlockEntityRenderer::new
         );
+
+        event.registerEntityRenderer(IGEntityRegistry.FEAR_BOLT.get(), NoopRenderer::new);
     }
 }

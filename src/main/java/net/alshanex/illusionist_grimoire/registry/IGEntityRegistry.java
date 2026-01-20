@@ -1,6 +1,7 @@
 package net.alshanex.illusionist_grimoire.registry;
 
 import net.alshanex.illusionist_grimoire.IllusionistGrimoireMod;
+import net.alshanex.illusionist_grimoire.entity.FearProjectile;
 import net.alshanex.illusionist_grimoire.entity.SpellTrapDummyEntity;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
@@ -23,6 +24,13 @@ public class IGEntityRegistry {
                     .clientTrackingRange(0)
                     .updateInterval(Integer.MAX_VALUE)
                     .build(ResourceLocation.fromNamespaceAndPath(IllusionistGrimoireMod.MODID, "spell_trap_dummy").toString()));
+
+    public static final DeferredHolder<EntityType<?>, EntityType<FearProjectile>> FEAR_BOLT =
+            ENTITY_TYPES.register("fear_bolt", () -> EntityType.Builder.<FearProjectile>of(FearProjectile::new, MobCategory.MISC)
+                    .sized(.5f, .5f)
+                    .clientTrackingRange(64)
+                    .build(ResourceLocation.fromNamespaceAndPath(IllusionistGrimoireMod.MODID, "fear_bolt").toString()));
+
 
     public static void register(IEventBus eventBus) {
         ENTITY_TYPES.register(eventBus);
