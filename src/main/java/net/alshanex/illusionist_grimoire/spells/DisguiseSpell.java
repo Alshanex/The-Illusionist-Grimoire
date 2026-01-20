@@ -59,7 +59,7 @@ public class DisguiseSpell extends AbstractSpell {
     public DisguiseSpell() {
         this.manaCostPerLevel = 15;
         this.baseSpellPower = 8;
-        this.spellPowerPerLevel = 5;
+        this.spellPowerPerLevel = 8;
         this.castTime = 40;
         this.baseManaCost = 70;
     }
