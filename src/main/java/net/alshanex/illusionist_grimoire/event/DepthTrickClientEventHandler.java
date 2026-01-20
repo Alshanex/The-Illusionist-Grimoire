@@ -22,31 +22,31 @@ public class DepthTrickClientEventHandler {
         if (player != null && player.hasEffect(IGEffectRegistry.DEPTH_TRICK)) {
             LivingEntity entity = event.getEntity();
 
-            // Check if entity is visible to player
             if (canPlayerSeeEntity(player, entity, event.getPartialTick())) {
                 PoseStack poseStack = event.getPoseStack();
 
                 Vec3 playerPos = player.getEyePosition(event.getPartialTick());
                 Vec3 entityPos = entity.getPosition(event.getPartialTick());
                 Vec3 direction = entityPos.subtract(playerPos).normalize();
-
-                // Move 3 blocks closer
                 Vec3 offset = direction.scale(-7.0);
 
                 poseStack.pushPose();
                 poseStack.translate(offset.x, offset.y, offset.z);
+
+                // Store that we pushed for this entity
+                entity.getPersistentData().putBoolean("depthTrickPushed", true);
             }
         }
     }
 
     @SubscribeEvent
     public static void onRenderEntityPost(RenderLivingEvent.Post<?, ?> event) {
-        Player player = Minecraft.getInstance().player;
+        LivingEntity entity = event.getEntity();
 
-        if (player != null && player.hasEffect(IGEffectRegistry.DEPTH_TRICK)) {
-            if (canPlayerSeeEntity(player, event.getEntity(), event.getPartialTick())) {
-                event.getPoseStack().popPose();
-            }
+        // Pop if we pushed, even if the render was modified/cancelled
+        if (entity.getPersistentData().getBoolean("depthTrickPushed")) {
+            event.getPoseStack().popPose();
+            entity.getPersistentData().remove("depthTrickPushed");
         }
     }
 

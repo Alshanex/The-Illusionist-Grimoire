@@ -33,8 +33,8 @@ public class FearProjectileSpell extends AbstractSpell {
     private final DefaultConfig defaultConfig = new DefaultConfig()
             .setMinRarity(SpellRarity.COMMON)
             .setSchoolResource(IGSchoolRegistry.ILLUSIONISM_RESOURCE)
-            .setMaxLevel(10)
-            .setCooldownSeconds(10)
+            .setMaxLevel(11)
+            .setCooldownSeconds(12)
             .build();
 
     public FearProjectileSpell() {

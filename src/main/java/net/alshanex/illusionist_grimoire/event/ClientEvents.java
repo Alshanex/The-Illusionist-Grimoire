@@ -60,6 +60,11 @@ public class ClientEvents {
 				fakePlayer.swinging = living.swinging;
 				fakePlayer.setSprinting(living.isSprinting());
 
+				byte customization = player.getEntityData().get(Player.DATA_PLAYER_MODE_CUSTOMISATION);
+				fakePlayer.getEntityData().set(Player.DATA_PLAYER_MODE_CUSTOMISATION, customization);
+
+				fakePlayer.setMainArm(player.getMainArm());
+
 				// Copy equipment
 				Arrays.stream(EquipmentSlot.values()).forEach((slot) ->
 						fakePlayer.setItemSlot(slot, living.getItemBySlot(slot).copy())

@@ -50,18 +50,18 @@ public class DisguiseSpell extends AbstractSpell {
     }
 
     private final DefaultConfig defaultConfig = new DefaultConfig()
-            .setMinRarity(SpellRarity.LEGENDARY)
+            .setMinRarity(SpellRarity.EPIC)
             .setSchoolResource(IGSchoolRegistry.ILLUSIONISM_RESOURCE)
-            .setMaxLevel(1)
+            .setMaxLevel(8)
             .setCooldownSeconds(70)
             .build();
 
     public DisguiseSpell() {
-        this.manaCostPerLevel = 25;
-        this.baseSpellPower = 50;
-        this.spellPowerPerLevel = 8;
-        this.castTime = 30;
-        this.baseManaCost = 100;
+        this.manaCostPerLevel = 10;
+        this.baseSpellPower = 8;
+        this.spellPowerPerLevel = 1;
+        this.castTime = 40;
+        this.baseManaCost = 70;
     }
 
     @Override
