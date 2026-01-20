@@ -1,0 +1,11 @@
+{
+  "flashbang": {
+    "subtitle": "subtitles.flashbang",
+    "sounds": [
+      {
+        "name": "illusionist_grimoire:flashbang",
+        "stream": true
+      }
+    ]
+  }
+}

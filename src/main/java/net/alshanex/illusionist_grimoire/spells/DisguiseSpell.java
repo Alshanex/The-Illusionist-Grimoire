@@ -81,7 +81,7 @@ public class DisguiseSpell extends AbstractSpell {
 
     @Override
     public boolean checkPreCastConditions(Level level, int spellLevel, LivingEntity entity, MagicData playerMagicData) {
-        if (Utils.preCastTargetHelper(level, entity, playerMagicData, this, 5, .15f)) {
+        if (Utils.preCastTargetHelper(level, entity, playerMagicData, this, 10, .15f)) {
             var target = ((TargetEntityCastData) playerMagicData.getAdditionalCastData()).getTarget((ServerLevel) level);
             if (target == null) {
                 return false;

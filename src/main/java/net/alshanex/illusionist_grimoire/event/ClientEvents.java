@@ -6,8 +6,10 @@ import net.alshanex.illusionist_grimoire.data.IGClientData;
 import net.alshanex.illusionist_grimoire.registry.IGEffectRegistry;
 import net.minecraft.client.CameraType;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.model.EntityModel;
 import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -17,6 +19,7 @@ import net.minecraft.world.entity.player.Player;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.client.event.RenderGuiLayerEvent;
 import net.neoforged.neoforge.client.event.RenderLivingEvent;
 import net.neoforged.neoforge.client.event.RenderNameTagEvent;
 import net.neoforged.neoforge.client.event.RenderPlayerEvent;
@@ -123,5 +126,50 @@ public class ClientEvents {
 				&& player.hasEffect(IGEffectRegistry.DISGUISED)) {
 			event.setCanceled(true);
 		}
+	}
+
+	private static final ResourceLocation OVERLAY_TEXTURE = ResourceLocation.fromNamespaceAndPath(IllusionistGrimoireMod.MODID, "textures/gui/job_application_screen.png");
+
+	@SubscribeEvent
+	public static void onRenderGuiLayer(RenderGuiLayerEvent.Post event) {
+		Minecraft mc = Minecraft.getInstance();
+		LocalPlayer player = mc.player;
+
+		if (player == null || !player.hasEffect(IGEffectRegistry.FEARED)) {
+			return;
+		}
+
+		var effectInstance = player.getEffect(IGEffectRegistry.FEARED);
+		int duration = effectInstance.getDuration();
+		int totalDuration = 120;
+		if (duration > totalDuration - 30) {
+			return;
+		}
+
+		GuiGraphics guiGraphics = event.getGuiGraphics();
+		int screenWidth = mc.getWindow().getGuiScaledWidth();
+		int screenHeight = mc.getWindow().getGuiScaledHeight();
+
+		// Your texture dimensions
+		int textureWidth = 229;
+		int textureHeight = 300;
+
+		float scale = (float) screenHeight / textureHeight;
+		int renderWidth = (int) (textureWidth * scale);
+		int renderHeight = screenHeight;
+
+		// Center position
+		int x = (screenWidth - renderWidth) / 2;
+		int y = 0;
+
+		// Render the texture
+		guiGraphics.blit(
+				OVERLAY_TEXTURE,
+				x, y,
+				renderWidth, renderHeight,
+				0, 0,
+				textureWidth, textureHeight,
+				textureWidth, textureHeight
+		);
 	}
 }
