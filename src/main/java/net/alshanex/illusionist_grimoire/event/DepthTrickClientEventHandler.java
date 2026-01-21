@@ -22,7 +22,7 @@ public class DepthTrickClientEventHandler {
         if (player != null && player.hasEffect(IGEffectRegistry.DEPTH_TRICK)) {
             LivingEntity entity = event.getEntity();
 
-            if (canPlayerSeeEntity(player, entity, event.getPartialTick()) && !entity.hasEffect(IGEffectRegistry.DISGUISED)) {
+            if (canPlayerSeeEntity(player, entity, event.getPartialTick())) {
                 PoseStack poseStack = event.getPoseStack();
 
                 Vec3 playerPos = player.getEyePosition(event.getPartialTick());
