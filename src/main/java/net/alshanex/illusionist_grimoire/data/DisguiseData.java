@@ -6,20 +6,26 @@ import net.alshanex.illusionist_grimoire.network.IGSyncEntityDataPacket;
 import net.alshanex.illusionist_grimoire.network.IGSyncPlayerDataPacket;
 import net.alshanex.illusionist_grimoire.registry.IGDataAttachments;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.neoforged.neoforge.network.PacketDistributor;
 
 import javax.annotation.Nullable;
+import java.util.Optional;
 import java.util.UUID;
 
 public class DisguiseData {
     private final int serverPlayerId;
     private @Nullable LivingEntity livingEntity;
+
+    // Persistent disguise entity
+    private @Nullable LivingEntity disguiseEntity;
 
     private ResourceLocation shapeshiftedEntityId;
     private boolean isMob = false;
@@ -46,6 +52,17 @@ public class DisguiseData {
         buffer.writeInt(data.serverPlayerId);
         buffer.writeResourceLocation(data.shapeshiftedEntityId);
 
+        // Write entity NBT
+        if (data.disguiseEntity != null) {
+            buffer.writeBoolean(true);
+            CompoundTag entityTag = new CompoundTag();
+            data.disguiseEntity.saveWithoutId(entityTag);
+            buffer.writeNbt(entityTag);
+        } else {
+            buffer.writeBoolean(false);
+        }
+
+        // Write player disguise info
         buffer.writeBoolean(data.disguisedPlayerUUID != null);
         if (data.disguisedPlayerUUID != null) {
             buffer.writeUUID(data.disguisedPlayerUUID);
@@ -57,6 +74,17 @@ public class DisguiseData {
         var data = new DisguiseData(buffer.readInt());
         data.shapeshiftedEntityId = buffer.readResourceLocation();
 
+        // Read entity NBT
+        boolean hasEntity = buffer.readBoolean();
+        if (hasEntity) {
+            CompoundTag entityTag = buffer.readNbt();
+            if (entityTag != null) {
+                // Store the tag for later creation
+                data.createDisguiseEntityFromTag(entityTag);
+            }
+        }
+
+        // Read player disguise info
         boolean hasPlayerData = buffer.readBoolean();
         if (hasPlayerData) {
             data.disguisedPlayerUUID = buffer.readUUID();
@@ -66,12 +94,29 @@ public class DisguiseData {
         return data;
     }
 
+    private void createDisguiseEntityFromTag(CompoundTag entityTag) {
+        // This will be called on client side after packet is received
+        // We need to defer entity creation until we have a world reference
+        // Store the tag for lazy creation
+        this.entityNBT = entityTag;
+    }
+
+    private CompoundTag entityNBT = null;
+
     public DisguiseData(LivingEntity livingEntity) {
         this(livingEntity == null ? -1 : livingEntity.getId());
         this.livingEntity = livingEntity;
     }
+
     public void saveNBTData(CompoundTag compound, HolderLookup.Provider provider) {
         compound.putString("shapeshiftId", this.shapeshiftedEntityId.toString());
+
+        // Save disguise entity
+        if (this.disguiseEntity != null) {
+            CompoundTag entityTag = new CompoundTag();
+            this.disguiseEntity.saveWithoutId(entityTag);
+            compound.put("DisguiseEntity", entityTag);
+        }
 
         if (this.disguisedPlayerUUID != null) {
             compound.putUUID("disguisedPlayerUUID", this.disguisedPlayerUUID);
@@ -81,6 +126,18 @@ public class DisguiseData {
 
     public void loadNBTData(CompoundTag compound, HolderLookup.Provider provider) {
         this.shapeshiftedEntityId = ResourceLocation.parse(compound.getString("shapeshiftId"));
+
+        // Load disguise entity
+        if (compound.contains("DisguiseEntity") && livingEntity != null) {
+            CompoundTag entityTag = compound.getCompound("DisguiseEntity");
+            Optional<EntityType<?>> typeOpt = EntityType.by(entityTag);
+            if (typeOpt.isPresent()) {
+                this.disguiseEntity = (LivingEntity) typeOpt.get().create(livingEntity.level());
+                if (this.disguiseEntity != null) {
+                    this.disguiseEntity.load(entityTag);
+                }
+            }
+        }
 
         if (compound.contains("disguisedPlayerUUID")) {
             this.disguisedPlayerUUID = compound.getUUID("disguisedPlayerUUID");
@@ -129,23 +186,51 @@ public class DisguiseData {
         this.shapeshiftedEntityId = loc;
         doSync();
     }
-    public ResourceLocation getShapeshiftedEntityId() {
+
+    // Get or create the disguise entity
+    @Nullable
+    public LivingEntity getDisguiseEntity() {
+        // Lazy creation from NBT if needed
+        if (disguiseEntity == null && entityNBT != null && livingEntity != null) {
+            Optional<EntityType<?>> typeOpt = EntityType.by(entityNBT);
+            if (typeOpt.isPresent()) {
+                this.disguiseEntity = (LivingEntity) typeOpt.get().create(livingEntity.level());
+                if (this.disguiseEntity != null) {
+                    this.disguiseEntity.load(entityNBT);
+                }
+            }
+            entityNBT = null; // Clear after creation
+        }
+        return disguiseEntity;
+    }
+
+    // Set the disguise entity (called server-side)
+    public void setDisguiseEntity(@Nullable LivingEntity entity) {
+        this.disguiseEntity = entity;
+        if (entity != null) {
+            this.shapeshiftedEntityId = BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType());
+        }
         doSync();
+    }
+
+    public ResourceLocation getShapeshiftedEntityId() {
         return this.shapeshiftedEntityId;
     }
+
     public static DisguiseData getDisguiseData(LivingEntity entity) {
         return entity.getData(IGDataAttachments.DISGUISE_DATA);
     }
+
     public void doSync() {
         if (livingEntity instanceof ServerPlayer serverPlayer) {
-            PacketDistributor.sendToPlayersTrackingEntityAndSelf(serverPlayer, new IGSyncPlayerDataPacket(this));
+            PacketDistributor.sendToPlayersTrackingEntityAndSelf(serverPlayer, IGSyncPlayerDataPacket.fromPlayer(serverPlayer));
         } else if (livingEntity instanceof IMagicEntity abstractSpellCastingMob) {
             PacketDistributor.sendToPlayersTrackingEntity(livingEntity, new IGSyncEntityDataPacket(this, abstractSpellCastingMob));
         }
     }
 
     public void syncToPlayer(ServerPlayer serverPlayer) {
-        PacketDistributor.sendToPlayer(serverPlayer, new IGSyncPlayerDataPacket(this));
+        PacketDistributor.sendToPlayer(serverPlayer, IGSyncPlayerDataPacket.fromPlayer(serverPlayer));
     }
 
     @Override
@@ -154,9 +239,13 @@ public class DisguiseData {
     }
 
     public DisguiseData getPersistentData(ServerPlayer serverPlayer) {
-        //This updates the reference while keeping the id the same (because we are in the middle of cloning logic, where id has not been set yet)
         DisguiseData persistentData = new DisguiseData(livingEntity);
         persistentData.livingEntity = serverPlayer;
+        persistentData.disguiseEntity = this.disguiseEntity;
+        persistentData.shapeshiftedEntityId = this.shapeshiftedEntityId;
+        persistentData.disguisedPlayerUUID = this.disguisedPlayerUUID;
+        persistentData.disguisedPlayerName = this.disguisedPlayerName;
+        persistentData.disguisedPlayerProfile = this.disguisedPlayerProfile;
         return persistentData;
     }
 }
