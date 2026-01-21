@@ -9,12 +9,15 @@
     "ItemCombinerMenuAccessor",
     "EntityAllianceMixin",
     "ProjectileMixin",
-    "EntityEyeHeightMixin"
+    "EntityEyeHeightMixin",
+    "EntityDimensionsMixin"
   ],
   "client": [
     "ShadowRendererMixin",
     "SkipBlockRenderingMixin",
-    "AbstractClientPlayerMixin"
+    "AbstractClientPlayerMixin",
+    "PlayerRendererMixin",
+    "EntityDimensionsMixin"
   ],
   "injectors": {
     "defaultRequire": 1

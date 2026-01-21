@@ -15,6 +15,7 @@ import net.alshanex.illusionist_grimoire.registry.IGSchoolRegistry;
 import net.alshanex.illusionist_grimoire.util.ModTags;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.protocol.game.ClientboundSetActionBarTextPacket;
@@ -116,7 +117,20 @@ public class DisguiseSpell extends AbstractSpell {
             if (targetEntity instanceof Player targetPlayer) {
                 disguiseData.setDisguisedPlayer(targetPlayer);
             } else {
-                disguiseData.setDisguisedPlayer(null); // Clear player data if not a player
+                // Mob disguise - create persistent entity instance
+                LivingEntity mobEntity = (LivingEntity) targetEntity.getType().create(entity.level());
+                if (mobEntity != null) {
+                    // Copy all data from target to the disguise entity
+                    net.minecraft.nbt.CompoundTag targetNBT = new net.minecraft.nbt.CompoundTag();
+                    targetEntity.saveWithoutId(targetNBT);
+                    mobEntity.load(targetNBT);
+
+                    // Set the mob disguise
+                    disguiseData.setMobDisguiseEntity(mobEntity);
+                }
+
+                // Clear player disguise data
+                disguiseData.setDisguisedPlayer(null);
             }
 
             entity.addEffect(new MobEffectInstance(IGEffectRegistry.DISGUISED, getDuration(spellLevel, entity), 0, false, false, true));

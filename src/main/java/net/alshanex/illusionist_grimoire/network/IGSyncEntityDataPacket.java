@@ -4,37 +4,36 @@ import io.redspace.ironsspellbooks.api.entity.IMagicEntity;
 import net.alshanex.illusionist_grimoire.IllusionistGrimoireMod;
 import net.alshanex.illusionist_grimoire.data.DisguiseData;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.entity.Entity;
-import net.neoforged.neoforge.network.handling.IPayloadContext;
+import net.minecraft.world.entity.LivingEntity;
 
-public class IGSyncEntityDataPacket implements CustomPacketPayload {
-    DisguiseData data;
-    int entityId;
-    public static final CustomPacketPayload.Type<IGSyncEntityDataPacket> TYPE = new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(IllusionistGrimoireMod.MODID, "sync_entity_data"));
-    public static final StreamCodec<RegistryFriendlyByteBuf, IGSyncEntityDataPacket> STREAM_CODEC = CustomPacketPayload.codec(IGSyncEntityDataPacket::write, IGSyncEntityDataPacket::new);
+import javax.swing.text.html.parser.Entity;
 
-    public IGSyncEntityDataPacket(DisguiseData data, IMagicEntity entity) {
-        this.data = data;
-        this.entityId = ((Entity) entity).getId();
+public record IGSyncEntityDataPacket(int entityId, DisguiseData data) implements CustomPacketPayload {
+    public static final Type<IGSyncEntityDataPacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(IllusionistGrimoireMod.MODID, "sync_entity_data"));
+
+    public static final StreamCodec<FriendlyByteBuf, IGSyncEntityDataPacket> STREAM_CODEC = StreamCodec.of(
+            IGSyncEntityDataPacket::write,
+            IGSyncEntityDataPacket::read
+    );
+
+    public IGSyncEntityDataPacket(DisguiseData data, LivingEntity entity) {
+        this(entity.getId(), data);
     }
 
-    public IGSyncEntityDataPacket(FriendlyByteBuf buf) {
-        entityId = buf.readInt();
-        data = DisguiseData.read(buf);
+    public static void write(FriendlyByteBuf buffer, IGSyncEntityDataPacket packet) {
+        buffer.writeInt(packet.entityId);
+        DisguiseData.write(buffer, packet.data);
     }
-    public void write(FriendlyByteBuf buf) {
-        buf.writeInt(entityId);
-        DisguiseData.write(buf, data);
-    }
-    public static void handle(IGSyncEntityDataPacket packet, IPayloadContext ctx) {
-        ctx.enqueueWork(() -> {
 
-        });
+    public static IGSyncEntityDataPacket read(FriendlyByteBuf buffer) {
+        int entityId = buffer.readInt();
+        DisguiseData data = DisguiseData.read(buffer);
+        return new IGSyncEntityDataPacket(entityId, data);
     }
+
     @Override
     public Type<? extends CustomPacketPayload> type() {
         return TYPE;
