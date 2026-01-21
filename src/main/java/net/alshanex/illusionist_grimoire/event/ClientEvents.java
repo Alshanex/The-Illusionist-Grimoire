@@ -27,6 +27,44 @@ import java.util.Arrays;
 
 @EventBusSubscriber(modid = IllusionistGrimoireMod.MODID, value = Dist.CLIENT)
 public class ClientEvents {
+	@SubscribeEvent
+	private static void renderShapeshift(RenderLivingEvent.Pre<LivingEntity, EntityModel<LivingEntity>> event) {
+		LivingEntity living = event.getEntity();
+		if (living instanceof Player player && player.hasEffect(IGEffectRegistry.DISGUISED)) {
+			var disguiseData = IGClientData.getDisguiseData(living);
+			ResourceLocation entityLoc = disguiseData.getShapeshiftedEntityId();
+
+			// Check if disguised as a player with specific skin data
+			if (!(disguiseData.isDisguisedAsPlayer() && disguiseData.getDisguisedPlayerProfile() != null)) {
+				// Original code for non-player entities
+				LivingEntity e = (LivingEntity) BuiltInRegistries.ENTITY_TYPE.get(entityLoc).create(living.level());
+				if(e != null){
+					e.yBodyRot = living.yBodyRot;
+					e.yBodyRotO = living.yBodyRotO;
+					e.yHeadRot = living.yHeadRot;
+					e.yHeadRotO = living.yHeadRotO;
+					e.xRotO = living.xRotO;
+					e.setXRot(living.getXRot());
+					e.walkAnimation.setSpeed(living.walkAnimation.speed());
+					e.walkAnimation.speedOld = living.walkAnimation.speedOld;
+					e.walkAnimation.position = living.walkAnimation.position;
+					e.attackAnim = living.attackAnim;
+					e.oAttackAnim = living.oAttackAnim;
+					e.swinging = living.swinging;
+					e.setSprinting(living.isSprinting());
+					Arrays.stream(EquipmentSlot.values()).forEach((slot) ->
+							e.setItemSlot(slot, living.getItemBySlot(slot).copy())
+					);
+
+					Minecraft.getInstance().getEntityRenderDispatcher()
+							.getRenderer(e)
+							.render(e, living.yBodyRot, event.getPartialTick(),
+									event.getPoseStack(), event.getMultiBufferSource(), event.getPackedLight());
+					event.setCanceled(true);
+				}
+			}
+		}
+	}
 
 	@SubscribeEvent
 	public static void onRenderNameplate(RenderNameTagEvent event) {

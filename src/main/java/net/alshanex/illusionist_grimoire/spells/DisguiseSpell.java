@@ -10,14 +10,11 @@ import io.redspace.ironsspellbooks.api.util.Utils;
 import io.redspace.ironsspellbooks.capabilities.magic.TargetEntityCastData;
 import net.alshanex.illusionist_grimoire.IllusionistGrimoireMod;
 import net.alshanex.illusionist_grimoire.data.DisguiseData;
-import net.alshanex.illusionist_grimoire.network.IGSyncPlayerDataPacket;
 import net.alshanex.illusionist_grimoire.registry.IGEffectRegistry;
 import net.alshanex.illusionist_grimoire.registry.IGSchoolRegistry;
 import net.alshanex.illusionist_grimoire.util.ModTags;
-import net.alshanex.illusionist_grimoire.util.PlayerDisguiseProvider;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.protocol.game.ClientboundSetActionBarTextPacket;
@@ -27,11 +24,9 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.effect.MobEffectInstance;
-import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
-import net.neoforged.neoforge.network.PacketDistributor;
 
 import java.util.List;
 import java.util.Optional;
@@ -112,44 +107,19 @@ public class DisguiseSpell extends AbstractSpell {
 
     @Override
     public void onCast(Level level, int spellLevel, LivingEntity entity, CastSource castSource, MagicData playerMagicData) {
-        if (playerMagicData.getAdditionalCastData() instanceof TargetEntityCastData target &&
-                level instanceof ServerLevel server &&
-                target.getTarget(server) != null &&
-                entity instanceof Player player) {
-
+        if (playerMagicData.getAdditionalCastData() instanceof TargetEntityCastData target && level instanceof ServerLevel server && target.getTarget(server)!=null) {
             LivingEntity targetEntity = target.getTarget(server);
+            DisguiseData disguiseData = DisguiseData.getDisguiseData(entity);
 
-            // Create disguise entity
-            EntityType<?> entityType = targetEntity.getType();
-            LivingEntity disguiseEntity = (LivingEntity) entityType.create(level);
+            disguiseData.setShapeshiftId(BuiltInRegistries.ENTITY_TYPE.getKey(targetEntity.getType()));
 
-            if (disguiseEntity != null) {
-                // Copy NBT from target
-                CompoundTag targetNBT = new CompoundTag();
-                targetEntity.saveWithoutId(targetNBT);
-                disguiseEntity.load(targetNBT);
-
-                // Store on player
-                ((PlayerDisguiseProvider) player).illusionistGrimoire$setDisguiseEntity(disguiseEntity);
-
-                // Update DisguiseData for player disguise info
-                DisguiseData disguiseData = DisguiseData.getDisguiseData(entity);
-                disguiseData.setShapeshiftId(BuiltInRegistries.ENTITY_TYPE.getKey(entityType));
-
-                if (targetEntity instanceof Player targetPlayer) {
-                    disguiseData.setDisguisedPlayer(targetPlayer);
-                } else {
-                    disguiseData.setDisguisedPlayer(null);
-                }
-
-                // Sync to all tracking players
-                if (entity instanceof ServerPlayer serverPlayer) {
-                    PacketDistributor.sendToPlayersTrackingEntityAndSelf(serverPlayer, IGSyncPlayerDataPacket.fromPlayer(serverPlayer));
-                }
-
-                // Apply effect
-                entity.addEffect(new MobEffectInstance(IGEffectRegistry.DISGUISED, getDuration(spellLevel, entity), 0, false, false, true));
+            if (targetEntity instanceof Player targetPlayer) {
+                disguiseData.setDisguisedPlayer(targetPlayer);
+            } else {
+                disguiseData.setDisguisedPlayer(null); // Clear player data if not a player
             }
+
+            entity.addEffect(new MobEffectInstance(IGEffectRegistry.DISGUISED, getDuration(spellLevel, entity), 0, false, false, true));
         }
         super.onCast(level, spellLevel, entity, castSource, playerMagicData);
     }
