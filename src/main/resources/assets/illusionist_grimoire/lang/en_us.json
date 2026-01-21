@@ -6,6 +6,7 @@
   "message.illusionist_grimoire.trap.no_spell_bound": "This trap has no spell bound to it!",
   "message.illusionist_grimoire.trap.spell_not_allowed": "This spell cannot be used in traps.",
   "message.illusionist_grimoire.trap.no_mana": "Not enough mana to put the trap.",
+  "message.illusionist_grimoire.disguise.blacklisted_mob": "You can't disguise into this entity.",
 
   "effect.illusionist_grimoire.paranoia": "Paranoia",
   "effect.illusionist_grimoire.depth_trick": "Distorted",

@@ -12,11 +12,15 @@ import net.alshanex.illusionist_grimoire.IllusionistGrimoireMod;
 import net.alshanex.illusionist_grimoire.data.DisguiseData;
 import net.alshanex.illusionist_grimoire.registry.IGEffectRegistry;
 import net.alshanex.illusionist_grimoire.registry.IGSchoolRegistry;
+import net.alshanex.illusionist_grimoire.util.ModTags;
+import net.minecraft.ChatFormatting;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.protocol.game.ClientboundSetActionBarTextPacket;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -85,7 +89,14 @@ public class DisguiseSpell extends AbstractSpell {
             var target = ((TargetEntityCastData) playerMagicData.getAdditionalCastData()).getTarget((ServerLevel) level);
             if (target == null) {
                 return false;
-
+            }
+            if (target.getType().is(ModTags.DISGUISE_BLACKLIST)){
+                if(entity instanceof ServerPlayer serverPlayer){
+                    serverPlayer.connection.send(
+                            new ClientboundSetActionBarTextPacket(Component.translatable("message.illusionist_grimoire.disguise.blacklisted_mob")
+                                    .withStyle(ChatFormatting.RED)));
+                }
+                return false;
             }
             playerMagicData.setAdditionalCastData(new TargetEntityCastData(target));
             return true;
