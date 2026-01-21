@@ -9,13 +9,17 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.model.EntityModel;
 import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.client.player.RemotePlayer;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -24,7 +28,9 @@ import net.neoforged.neoforge.client.event.RenderLivingEvent;
 import net.neoforged.neoforge.client.event.RenderNameTagEvent;
 import net.neoforged.neoforge.client.event.RenderPlayerEvent;
 
+import java.lang.reflect.Field;
 import java.util.Arrays;
+import java.util.Optional;
 
 @EventBusSubscriber(modid = IllusionistGrimoireMod.MODID, value = Dist.CLIENT)
 public class ClientEvents {
@@ -40,38 +46,12 @@ public class ClientEvents {
 				// Create a fake player entity with the target's skin
 				GameProfile targetProfile = disguiseData.getDisguisedPlayerProfile();
 
-				var fakePlayer = new net.minecraft.client.player.RemotePlayer(
+				var fakePlayer = new RemotePlayer(
 						(ClientLevel) living.level(),
 						targetProfile
 				);
 
-				// Copy all the animation and rotation data
-				fakePlayer.yBodyRot = living.yBodyRot;
-				fakePlayer.yBodyRotO = living.yBodyRotO;
-				fakePlayer.yHeadRot = living.yHeadRot;
-				fakePlayer.yHeadRotO = living.yHeadRotO;
-				fakePlayer.xRotO = living.xRotO;
-				fakePlayer.setXRot(living.getXRot());
-				fakePlayer.walkAnimation.setSpeed(living.walkAnimation.speed());
-				fakePlayer.walkAnimation.speedOld = living.walkAnimation.speedOld;
-				fakePlayer.walkAnimation.position = living.walkAnimation.position;
-				fakePlayer.attackAnim = living.attackAnim;
-				fakePlayer.oAttackAnim = living.oAttackAnim;
-				fakePlayer.swinging = living.swinging;
-				fakePlayer.setSprinting(living.isSprinting());
-
-				byte customization = player.getEntityData().get(Player.DATA_PLAYER_MODE_CUSTOMISATION);
-				fakePlayer.getEntityData().set(Player.DATA_PLAYER_MODE_CUSTOMISATION, customization);
-
-				fakePlayer.setMainArm(player.getMainArm());
-
-				// Copy equipment
-				Arrays.stream(EquipmentSlot.values()).forEach((slot) ->
-						fakePlayer.setItemSlot(slot, living.getItemBySlot(slot).copy())
-				);
-
-				// Set position for rendering
-				fakePlayer.setPos(living.getX(), living.getY(), living.getZ());
+				syncRemotePlayer(fakePlayer, player);
 
 				// Render the fake player with their skin
 				Minecraft.getInstance().getEntityRenderDispatcher()
@@ -109,6 +89,150 @@ public class ClientEvents {
 				}
 			}
 		}
+	}
+
+	public static void syncRemotePlayer(RemotePlayer remote, Player source) {
+		// === POSITION AND ROTATION ===
+		remote.setPos(source.getX(), source.getY(), source.getZ());
+		remote.setXRot(source.getXRot());
+		remote.setYRot(source.getYRot());
+		remote.setYHeadRot(source.getYHeadRot());
+		remote.setYBodyRot(source.yBodyRot);
+
+		// Previous tick values (for interpolation/rendering)
+		remote.xo = source.xo;
+		remote.yo = source.yo;
+		remote.zo = source.zo;
+		remote.xRotO = source.xRotO;
+		remote.yRotO = source.yRotO;
+		remote.yHeadRotO = source.yHeadRotO;
+		remote.yBodyRotO = source.yBodyRotO;
+
+		// Old position (used for some calculations)
+		remote.xOld = source.xOld;
+		remote.yOld = source.yOld;
+		remote.zOld = source.zOld;
+
+		// === MOVEMENT ===
+		remote.setDeltaMovement(source.getDeltaMovement());
+		remote.setOnGround(source.onGround());
+		remote.horizontalCollision = source.horizontalCollision;
+		remote.verticalCollision = source.verticalCollision;
+		remote.verticalCollisionBelow = source.verticalCollisionBelow;
+		remote.minorHorizontalCollision = source.minorHorizontalCollision;
+
+		// Fall distance (affects fall animation and sounds)
+		remote.fallDistance = source.fallDistance;
+
+		// Walk distance (affects footstep sounds/animation timing)
+		remote.walkDist = source.walkDist;
+		remote.walkDistO = source.walkDistO;
+		remote.moveDist = source.moveDist;
+		remote.walkAnimation.setSpeed(source.walkAnimation.speed());
+		remote.walkAnimation.speedOld = source.walkAnimation.speedOld;
+		remote.walkAnimation.position = source.walkAnimation.position;
+
+		// === POSE AND FLAGS ===
+		remote.setPose(source.getPose());
+		remote.setSprinting(source.isSprinting());
+		remote.setSwimming(source.isSwimming());
+		remote.setShiftKeyDown(source.isShiftKeyDown());
+
+		byte customization = source.getEntityData().get(Player.DATA_PLAYER_MODE_CUSTOMISATION);
+		remote.getEntityData().set(Player.DATA_PLAYER_MODE_CUSTOMISATION, customization);
+
+		remote.setMainArm(source.getMainArm());
+
+		// Fall flying (elytra) - use setSharedFlag for the flag
+		remote.setSharedFlag(7, source.isFallFlying());
+
+		remote.swimAmount = source.swimAmount;
+		remote.swimAmountO = source.swimAmountO;
+
+		// Glowing effect
+		remote.setGlowingTag(source.hasGlowingTag());
+
+		// Invisibility
+		remote.setInvisible(source.isInvisible());
+
+		// === SWING / ATTACK ANIMATION ===
+		remote.swinging = source.swinging;
+		remote.swingTime = source.swingTime;
+		remote.swingingArm = source.swingingArm;
+		remote.attackAnim = source.attackAnim;
+		remote.oAttackAnim = source.oAttackAnim;
+
+		// === BOB ANIMATION ===
+		remote.bob = source.bob;
+		remote.oBob = source.oBob;
+
+		// === HURT ANIMATION ===
+		remote.hurtTime = source.hurtTime;
+		remote.hurtDuration = source.hurtDuration;
+		remote.hurtDir = source.getHurtDir();
+
+		// === DEATH ANIMATION ===
+		remote.deathTime = source.deathTime;
+
+		// === HEALTH (affects some visual states) ===
+		remote.setHealth(source.getHealth());
+
+		// === USING ITEM STATE ===
+		if (source.isUsingItem()) {
+			// Sync the using item state
+			InteractionHand hand = source.getUsedItemHand();
+			if (!remote.isUsingItem() || remote.getUsedItemHand() != hand) {
+				remote.startUsingItem(hand);
+			}
+		} else if (remote.isUsingItem()) {
+			remote.stopUsingItem();
+		}
+
+		// === EQUIPMENT ===
+		Arrays.stream(EquipmentSlot.values()).forEach((slot) ->
+				remote.setItemSlot(slot, source.getItemBySlot(slot).copy())
+		);
+
+		// === FIRE STATE ===
+		remote.setRemainingFireTicks(source.getRemainingFireTicks());
+
+		// === FREEZING STATE ===
+		remote.setTicksFrozen(source.getTicksFrozen());
+		remote.isInPowderSnow = source.isInPowderSnow;
+		remote.wasInPowderSnow = source.wasInPowderSnow;
+
+		// === SLEEP STATE ===
+		if (source.isSleeping()) {
+			source.getSleepingPos().ifPresent(pos -> {
+				if (!remote.isSleeping() || !remote.getSleepingPos().equals(Optional.of(pos))) {
+					remote.setSleepingPos(pos);
+				}
+			});
+		} else if (remote.isSleeping()) {
+			remote.clearSleepingPos();
+		}
+
+		// === SPIN ATTACK (Trident Riptide) ===
+		remote.autoSpinAttackTicks = source.autoSpinAttackTicks;
+
+		// === TICK COUNT (can affect some animations) ===
+		remote.tickCount = source.tickCount;
+
+		// === AbstractClientPlayer specific ===
+		if (source instanceof AbstractClientPlayer sourceClient) {
+			remote.deltaMovementOnPreviousTick = sourceClient.deltaMovementOnPreviousTick;
+			remote.elytraRotX = sourceClient.elytraRotX;
+			remote.elytraRotY = sourceClient.elytraRotY;
+			remote.elytraRotZ = sourceClient.elytraRotZ;
+		}
+
+		// === CLOAK ANIMATION (cape physics) ===
+		remote.xCloak = source.xCloak;
+		remote.yCloak = source.yCloak;
+		remote.zCloak = source.zCloak;
+		remote.xCloakO = source.xCloakO;
+		remote.yCloakO = source.yCloakO;
+		remote.zCloakO = source.zCloakO;
 	}
 
 	@SubscribeEvent
