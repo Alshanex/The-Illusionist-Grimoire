@@ -72,7 +72,7 @@ public abstract class EntityDimensionsMixin implements DimensionsRefresher {
             var disguiseData = DisguiseData.getDisguiseData(player);
             LivingEntity mob = disguiseData.getMobDisguiseEntity();
             if (mob != null && !disguiseData.isDisguisedAsPlayer()) {
-                cir.setReturnValue(mob.getEyeHeight(pose));
+                cir.setReturnValue(mob.getEyeHeight(Pose.STANDING));
             }
         }
     }

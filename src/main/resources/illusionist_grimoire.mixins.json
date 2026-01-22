@@ -24,7 +24,8 @@
     "ParrotAccessor",
     "SquidAccessor",
     "SquidTickTrackerMixin",
-    "PlayerLightLevelMixin"
+    "PlayerLightLevelMixin",
+    "WitherAccessor"
   ],
   "injectors": {
     "defaultRequire": 1

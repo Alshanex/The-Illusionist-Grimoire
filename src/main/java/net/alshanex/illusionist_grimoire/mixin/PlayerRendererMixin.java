@@ -4,6 +4,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import net.alshanex.illusionist_grimoire.data.IGClientData;
 import net.alshanex.illusionist_grimoire.registry.IGEffectRegistry;
 import net.alshanex.illusionist_grimoire.util.SquidAnimationTracker;
+import net.alshanex.illusionist_grimoire.util.WitherHeadRotation;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.PlayerModel;
 import net.minecraft.client.model.HumanoidModel;
@@ -13,14 +14,12 @@ import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.LivingEntityRenderer;
 import net.minecraft.client.renderer.entity.player.PlayerRenderer;
 import net.minecraft.util.Mth;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EquipmentSlot;
-import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.ambient.Bat;
 import net.minecraft.world.entity.animal.Parrot;
 import net.minecraft.world.entity.animal.Squid;
 import net.minecraft.world.entity.boss.enderdragon.EnderDragon;
+import net.minecraft.world.entity.boss.wither.WitherBoss;
 import net.minecraft.world.entity.monster.Creeper;
 import net.minecraft.world.entity.monster.EnderMan;
 import net.minecraft.world.entity.monster.Phantom;
@@ -63,6 +62,11 @@ public abstract class PlayerRendererMixin extends LivingEntityRenderer<AbstractC
                 ci.cancel(); // Don't render anything in first person
                 return;
             }
+
+            if (player.isCrouching()) {
+                poseStack.translate(0.0, 0.125, 0.0);
+            }
+
             // Sync player state to mob entity
             syncPlayerStateToMob(player, mobEntity, partialTicks);
 
@@ -294,6 +298,31 @@ public abstract class PlayerRendererMixin extends LivingEntityRenderer<AbstractC
             dragon.positions[dragon.posPointer][1] = player.getY();
         }
 
+        // === WITHER ===
+        if (mobEntity instanceof WitherBoss wither) {
+            WitherHeadRotation witherRotation = (WitherHeadRotation) wither;
+
+            // Update previous rotations for interpolation
+            witherRotation.illusionist_grimoire$setYRotOHeads(0, witherRotation.illusionist_grimoire$getYRotHeads(0));
+            witherRotation.illusionist_grimoire$setYRotOHeads(1, witherRotation.illusionist_grimoire$getYRotHeads(1));
+            witherRotation.illusionist_grimoire$setXRotOHeads(0, witherRotation.illusionist_grimoire$getXRotHeads(0));
+            witherRotation.illusionist_grimoire$setXRotOHeads(1, witherRotation.illusionist_grimoire$getXRotHeads(1));
+
+            // When no targets, side heads should look at body rotation
+            float targetYaw = wither.yBodyRot;
+
+            for (int i = 0; i < 2; i++) {
+                float currentYaw = witherRotation.illusionist_grimoire$getYRotHeads(i);
+                float deltaYaw = Mth.wrapDegrees(targetYaw - currentYaw);
+
+                float newYaw = currentYaw + deltaYaw * 0.1F;
+                witherRotation.illusionist_grimoire$setYRotHeads(i, newYaw);
+
+                // Keep heads level (no vertical rotation when no target)
+                witherRotation.illusionist_grimoire$setXRotHeads(i, 0.0F);
+            }
+        }
+
         // === ENDERMAN ===
         if (mobEntity instanceof EnderMan enderman) {
             // Show carried block if player holds a BlockItem
@@ -317,7 +346,7 @@ public abstract class PlayerRendererMixin extends LivingEntityRenderer<AbstractC
             bipedModel.hat.visible = true;
         } else {
             bipedModel.setAllVisible(true);
-            bipedModel.crouching = mobEntity.isShiftKeyDown();
+            //bipedModel.crouching = mobEntity.isShiftKeyDown();
 
             // Set arm poses based on player's hand usage
             HumanoidModel.ArmPose mainHandPose = HumanoidModel.ArmPose.EMPTY;

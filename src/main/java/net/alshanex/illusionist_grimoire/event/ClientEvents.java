@@ -1,6 +1,7 @@
 package net.alshanex.illusionist_grimoire.event;
 
 import com.mojang.authlib.GameProfile;
+import io.redspace.ironsspellbooks.api.util.Utils;
 import net.alshanex.illusionist_grimoire.IllusionistGrimoireMod;
 import net.alshanex.illusionist_grimoire.data.IGClientData;
 import net.alshanex.illusionist_grimoire.registry.IGEffectRegistry;
@@ -13,9 +14,11 @@ import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.GlowSquid;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.monster.Blaze;
 import net.minecraft.world.entity.player.Player;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -76,6 +79,14 @@ public class ClientEvents {
 								player.getRandomZ(0.6),
 								0.0, 0.0, 0.0
 						);
+					} else if (mobEntity instanceof Blaze blaze){
+						if (Utils.random.nextInt(24) == 0 && !blaze.isSilent()) {
+							player.level().playLocalSound(player.getX() + (double)0.5F, player.getY() + (double)0.5F, player.getZ() + (double)0.5F, SoundEvents.BLAZE_BURN, player.getSoundSource(), 1.0F + Utils.random.nextFloat(), Utils.random.nextFloat() * 0.7F + 0.3F, false);
+						}
+
+						for(int i = 0; i < 2; ++i) {
+							player.level().addParticle(ParticleTypes.LARGE_SMOKE, player.getRandomX((double)0.5F), player.getRandomY(), player.getRandomZ((double)0.5F), (double)0.0F, (double)0.0F, (double)0.0F);
+						}
 					}
 				}
 			}
