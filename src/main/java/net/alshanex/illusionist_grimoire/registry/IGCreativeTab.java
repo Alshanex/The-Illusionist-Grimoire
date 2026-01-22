@@ -23,6 +23,8 @@ public class IGCreativeTab {
             .icon(() -> new ItemStack(ItemRegistry.ARCHEVOKER_HELMET))
             .displayItems((enabledFeatures, entries) -> {
                 entries.accept(IGItemRegistry.MAGIC_TRAP_ITEM.get());
+
+                entries.accept(IGItemRegistry.PICTURE_BOOK.get());
             })
             .withTabsBefore(CreativeTabRegistry.EQUIPMENT_TAB.getId())
             .build());

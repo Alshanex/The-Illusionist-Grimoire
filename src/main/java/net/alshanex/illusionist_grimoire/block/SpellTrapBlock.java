@@ -3,6 +3,7 @@ package net.alshanex.illusionist_grimoire.block;
 import com.mojang.serialization.MapCodec;
 import net.alshanex.illusionist_grimoire.item.MagicTrapItem;
 import net.alshanex.illusionist_grimoire.registry.IGBlockEntityRegistry;
+import net.minecraft.client.particle.ParticleEngine;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.sounds.SoundEvents;
@@ -26,10 +27,14 @@ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.DirectionProperty;
 import net.minecraft.world.level.material.PushReaction;
 import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
+import net.neoforged.neoforge.client.extensions.common.IClientBlockExtensions;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.function.Consumer;
 
 public class SpellTrapBlock extends BaseEntityBlock {
     public static final MapCodec<SpellTrapBlock> CODEC = simpleCodec(SpellTrapBlock::new);
@@ -58,6 +63,24 @@ public class SpellTrapBlock extends BaseEntityBlock {
                 .noOcclusion()
                 .lightLevel(state -> 3)
                 .pushReaction(PushReaction.DESTROY));
+    }
+
+    @Override
+    public void initializeClient(Consumer<IClientBlockExtensions> consumer) {
+        consumer.accept(new IClientBlockExtensions() {
+
+            @Override
+            public boolean addDestroyEffects(BlockState state, Level level, BlockPos pos, ParticleEngine manager) {
+                // Return true to cancel the default vanilla particles
+                return true;
+            }
+
+            @Override
+            public boolean addHitEffects(BlockState state, Level level, HitResult target, ParticleEngine manager) {
+                // Return true to prevent particles while punching the block
+                return true;
+            }
+        });
     }
 
     @Override

@@ -2,10 +2,14 @@ package net.alshanex.illusionist_grimoire.event;
 
 import com.mojang.authlib.GameProfile;
 import io.redspace.ironsspellbooks.api.util.Utils;
+import io.redspace.ironsspellbooks.player.KeyState;
 import net.alshanex.illusionist_grimoire.IllusionistGrimoireMod;
 import net.alshanex.illusionist_grimoire.data.IGClientData;
+import net.alshanex.illusionist_grimoire.item.PictureBookItem;
 import net.alshanex.illusionist_grimoire.registry.IGEffectRegistry;
+import net.alshanex.illusionist_grimoire.screen.DisguiseSelectionScreen;
 import net.minecraft.client.CameraType;
+import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.model.EntityModel;
@@ -20,16 +24,18 @@ import net.minecraft.world.entity.GlowSquid;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.monster.Blaze;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.client.event.RenderGuiLayerEvent;
-import net.neoforged.neoforge.client.event.RenderLivingEvent;
-import net.neoforged.neoforge.client.event.RenderNameTagEvent;
-import net.neoforged.neoforge.client.event.RenderPlayerEvent;
+import net.neoforged.neoforge.client.event.*;
 import net.neoforged.neoforge.event.tick.PlayerTickEvent;
+import net.neoforged.neoforge.network.PacketDistributor;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+
+import static net.alshanex.illusionist_grimoire.setup.KeyMappings.SCREEN_KEYMAP;
 
 @EventBusSubscriber(modid = IllusionistGrimoireMod.MODID, value = Dist.CLIENT)
 public class ClientEvents {
@@ -136,5 +142,52 @@ public class ClientEvents {
 				textureWidth, textureHeight,
 				textureWidth, textureHeight
 		);
+	}
+
+	private static final ArrayList<KeyState> KEY_STATES = new ArrayList<>();
+	private static final KeyState SCREEN_STATE = register(SCREEN_KEYMAP);
+
+	private static KeyState register(KeyMapping key) {
+		var k = new KeyState(key);
+		KEY_STATES.add(k);
+		return k;
+	}
+
+	@SubscribeEvent
+	public static void onKeyInput(InputEvent.Key event) {
+		handleInputEvent(event.getKey(), event.getAction());
+	}
+
+	@SubscribeEvent
+	public static void onMouseInput(InputEvent.MouseButton.Pre event) {
+		handleInputEvent(event.getButton(), event.getAction());
+	}
+
+	private static void handleInputEvent(int button, int action) {
+		var minecraft = Minecraft.getInstance();
+		Player player = minecraft.player;
+		if (player == null) {
+			return;
+		}
+		if (SCREEN_STATE.wasPressed() && minecraft.screen == null) {
+			ItemStack mainHand = player.getMainHandItem();
+
+			ItemStack pictureBookStack = null;
+
+			if (mainHand.getItem() instanceof PictureBookItem) {
+				pictureBookStack = mainHand;
+			}
+
+			if (pictureBookStack != null) {
+				minecraft.setScreen(new DisguiseSelectionScreen(pictureBookStack));
+			}
+		}
+		update();
+	}
+
+	private static void update() {
+		for (KeyState k : KEY_STATES) {
+			k.update();
+		}
 	}
 }

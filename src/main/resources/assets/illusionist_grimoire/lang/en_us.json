@@ -7,6 +7,19 @@
   "message.illusionist_grimoire.trap.spell_not_allowed": "This spell cannot be used in traps.",
   "message.illusionist_grimoire.trap.no_mana": "Not enough mana to put the trap.",
   "message.illusionist_grimoire.disguise.blacklisted_mob": "You can't disguise into this entity.",
+  "message.illusionist_grimoire.picture_book.no_entity_in_slot": "There's no entity in the selected slot.",
+  "message.illusionist_grimoire.picture_book.no_entity_targeted": "No entity targeted",
+  "message.illusionist_grimoire.picture_book.entity_bound": "Bound to slot %s: %s",
+
+  "tooltip.illusionist_grimoire.picture_book.selected_slot": "Selected Slot: %s",
+  "tooltip.illusionist_grimoire.picture_book.bound": "Bound: %s",
+  "tooltip.illusionist_grimoire.picture_book.empty": "Empty",
+
+  "key.illusionist_grimoire.open_disguise_gui": "Open Disguise Menu",
+  "key.categories.illusionist_grimoire": "Illusionist Grimoire",
+
+  "gui.illusionist_grimoire.disguise_selection": "Select Disguise",
+  "gui.illusionist_grimoire.disguise_selection.instructions": "Click to select • Right-click to clear",
 
   "effect.illusionist_grimoire.paranoia": "Paranoia",
   "effect.illusionist_grimoire.depth_trick": "Distorted",
@@ -17,6 +30,10 @@
   "itemGroup.illusionist_grimoire.main_tab": "The Illusionist Grimoire",
 
   "item.illusionist_grimoire.magic_trap_item": "The Trapwright’s Grimoire",
+  "item.illusionist_grimoire.picture_book": "Picture Book",
+
+  "block.illusionist_grimoire.spell_trap": "Nothing to see here, carry on",
+  "block.illusionist_grimoire.illusion_block": "Air (trust)",
 
   "spell.illusionist_grimoire.illusion_wall": "Wonderwall",
   "spell.illusionist_grimoire.illusion_wall.desc": "Creates an illusionary wall ahead of the caster for 30 seconds, making entities lose track of it.",

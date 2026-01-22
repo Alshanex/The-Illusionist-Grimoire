@@ -10,6 +10,7 @@ import io.redspace.ironsspellbooks.api.util.Utils;
 import io.redspace.ironsspellbooks.capabilities.magic.TargetEntityCastData;
 import net.alshanex.illusionist_grimoire.IllusionistGrimoireMod;
 import net.alshanex.illusionist_grimoire.data.DisguiseData;
+import net.alshanex.illusionist_grimoire.network.IGSyncPlayerDataPacket;
 import net.alshanex.illusionist_grimoire.registry.IGEffectRegistry;
 import net.alshanex.illusionist_grimoire.registry.IGSchoolRegistry;
 import net.alshanex.illusionist_grimoire.util.ModTags;
@@ -28,6 +29,7 @@ import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
+import net.neoforged.neoforge.network.PacketDistributor;
 
 import java.util.List;
 import java.util.Optional;
@@ -136,6 +138,8 @@ public class DisguiseSpell extends AbstractSpell {
                 disguiseData.disguisedPlayerName = null;
                 disguiseData.disguisedPlayerProfile = null;
             }
+
+            PacketDistributor.sendToPlayersTrackingEntityAndSelf(entity, new IGSyncPlayerDataPacket(disguiseData));
 
             entity.addEffect(new MobEffectInstance(IGEffectRegistry.DISGUISED, getDuration(spellLevel, entity), 0, false, false, true));
         }
