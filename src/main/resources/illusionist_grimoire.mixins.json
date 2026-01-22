@@ -9,15 +9,13 @@
     "ItemCombinerMenuAccessor",
     "EntityAllianceMixin",
     "ProjectileMixin",
-    "EntityEyeHeightMixin",
-    "EntityDimensionsMixin"
+    "EntityEyeHeightMixin"
   ],
   "client": [
     "ShadowRendererMixin",
     "SkipBlockRenderingMixin",
     "AbstractClientPlayerMixin",
     "PlayerRendererMixin",
-    "EntityDimensionsMixin",
     "WalkAnimationStateAccessor",
     "EntityAccessor",
     "AquaticMovementMixin",
@@ -25,7 +23,10 @@
     "SquidAccessor",
     "SquidTickTrackerMixin",
     "PlayerLightLevelMixin",
-    "WitherAccessor"
+    "WitherAccessor",
+    "GuardianAccessor",
+    "GuardianTickTrackerMixin",
+    "RabbitAccessor"
   ],
   "injectors": {
     "defaultRequire": 1

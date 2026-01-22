@@ -5,7 +5,6 @@ import io.redspace.ironsspellbooks.api.entity.IMagicEntity;
 import net.alshanex.illusionist_grimoire.network.IGSyncEntityDataPacket;
 import net.alshanex.illusionist_grimoire.network.IGSyncPlayerDataPacket;
 import net.alshanex.illusionist_grimoire.registry.IGDataAttachments;
-import net.alshanex.illusionist_grimoire.util.DimensionsRefresher;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
@@ -207,11 +206,6 @@ public class DisguiseData {
         this.mobDisguiseEntity = entity;
         if (entity != null) {
             this.shapeshiftedEntityId = BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType());
-        }
-
-        // Refresh dimensions when disguise changes
-        if (livingEntity instanceof Player player) {
-            ((DimensionsRefresher) player).illusionist_refreshDimensions();
         }
 
         doSync();

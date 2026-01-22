@@ -3,6 +3,7 @@ package net.alshanex.illusionist_grimoire.mixin;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.alshanex.illusionist_grimoire.data.IGClientData;
 import net.alshanex.illusionist_grimoire.registry.IGEffectRegistry;
+import net.alshanex.illusionist_grimoire.util.GuardianAnimationTracker;
 import net.alshanex.illusionist_grimoire.util.SquidAnimationTracker;
 import net.alshanex.illusionist_grimoire.util.WitherHeadRotation;
 import net.minecraft.client.Minecraft;
@@ -17,11 +18,13 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.ambient.Bat;
 import net.minecraft.world.entity.animal.Parrot;
+import net.minecraft.world.entity.animal.Rabbit;
 import net.minecraft.world.entity.animal.Squid;
 import net.minecraft.world.entity.boss.enderdragon.EnderDragon;
 import net.minecraft.world.entity.boss.wither.WitherBoss;
 import net.minecraft.world.entity.monster.Creeper;
 import net.minecraft.world.entity.monster.EnderMan;
+import net.minecraft.world.entity.monster.Guardian;
 import net.minecraft.world.entity.monster.Phantom;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.phys.Vec3;
@@ -331,6 +334,99 @@ public abstract class PlayerRendererMixin extends LivingEntityRenderer<AbstractC
             } else {
                 enderman.setCarriedBlock(null);
             }
+        }
+
+        // === GUARDIAN / ELDER GUARDIAN ===
+        if (mobEntity instanceof Guardian guardian) {
+            GuardianAccessor guardianAccessor = (GuardianAccessor) guardian;
+            GuardianAnimationTracker tickTracker = (GuardianAnimationTracker) guardian;
+
+            // Only update animation once per game tick, not every render frame
+            int currentTick = player.tickCount;
+            boolean shouldUpdate = tickTracker.illusionist_grimoire$getLastAnimationTick() != currentTick;
+
+            if (shouldUpdate) {
+                tickTracker.illusionist_grimoire$setLastAnimationTick(currentTick);
+
+                // Update previous animation values for interpolation
+                guardianAccessor.setClientSideTailAnimationO(guardianAccessor.getClientSideTailAnimation());
+                guardianAccessor.setClientSideSpikesAnimationO(guardianAccessor.getClientSideSpikesAnimation());
+
+                // Set moving state based on player's velocity
+                Vec3 velocity = player.getDeltaMovement();
+                double horizontalDist = velocity.horizontalDistance();
+                boolean isMoving = horizontalDist > 0.003; // Same threshold as squid
+                guardianAccessor.invokeSetMoving(isMoving);
+
+                // Update tail animation
+                if (player.isInWater()) {
+                    if (isMoving) {
+                        float tailSpeed = guardianAccessor.getClientSideTailAnimationSpeed();
+                        if (tailSpeed < 0.5F) {
+                            guardianAccessor.setClientSideTailAnimationSpeed(4.0F);
+                        } else {
+                            guardianAccessor.setClientSideTailAnimationSpeed(tailSpeed + (0.5F - tailSpeed) * 0.1F);
+                        }
+                    } else {
+                        float tailSpeed = guardianAccessor.getClientSideTailAnimationSpeed();
+                        guardianAccessor.setClientSideTailAnimationSpeed(tailSpeed + (0.125F - tailSpeed) * 0.2F);
+                    }
+                } else {
+                    // Out of water
+                    guardianAccessor.setClientSideTailAnimationSpeed(2.0F);
+                }
+
+                float newTailAnimation = guardianAccessor.getClientSideTailAnimation() +
+                        guardianAccessor.getClientSideTailAnimationSpeed();
+                guardianAccessor.setClientSideTailAnimation(newTailAnimation);
+
+                // Update spikes animation (the quills!)
+                if (!player.isInWaterOrBubble()) {
+                    guardianAccessor.setClientSideSpikesAnimation(player.getRandom().nextFloat());
+                } else if (isMoving) {
+                    float spikes = guardianAccessor.getClientSideSpikesAnimation();
+                    guardianAccessor.setClientSideSpikesAnimation(spikes + (0.0F - spikes) * 0.25F);
+                } else {
+                    float spikes = guardianAccessor.getClientSideSpikesAnimation();
+                    guardianAccessor.setClientSideSpikesAnimation(spikes + (1.0F - spikes) * 0.06F);
+                }
+            }
+        }
+
+        // === RABBIT ===
+        if (mobEntity instanceof Rabbit rabbit) {
+            RabbitAccessor rabbitAccessor = (RabbitAccessor) rabbit;
+
+            // Detect jump start
+            boolean wasOnGround = rabbitAccessor.getWasOnGround();
+            boolean isOnGround = player.onGround();
+
+            if (!isOnGround && wasOnGround) {
+                // Player just jumped - start jump animation
+                rabbitAccessor.setJumpDuration(10);
+                rabbitAccessor.setJumpTicks(0);
+                rabbit.setJumping(true);
+            }
+
+            // Update jump animation
+            int jumpTicks = rabbitAccessor.getJumpTicks();
+            int jumpDuration = rabbitAccessor.getJumpDuration();
+
+            if (jumpTicks != jumpDuration) {
+                rabbitAccessor.setJumpTicks(jumpTicks + 1);
+            } else if (jumpDuration != 0) {
+                rabbitAccessor.setJumpTicks(0);
+                rabbitAccessor.setJumpDuration(0);
+                rabbit.setJumping(false);
+            }
+
+            // Detect landing
+            if (isOnGround && !wasOnGround) {
+                rabbit.setJumping(false);
+            }
+
+            // Update wasOnGround for next frame
+            rabbitAccessor.setWasOnGround(isOnGround);
         }
     }
 
