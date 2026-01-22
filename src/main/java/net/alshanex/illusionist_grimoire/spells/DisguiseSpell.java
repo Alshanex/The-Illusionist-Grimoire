@@ -112,16 +112,18 @@ public class DisguiseSpell extends AbstractSpell {
             LivingEntity targetEntity = target.getTarget(server);
             DisguiseData disguiseData = DisguiseData.getDisguiseData(entity);
 
-            disguiseData.setShapeshiftId(BuiltInRegistries.ENTITY_TYPE.getKey(targetEntity.getType()));
-
             if (targetEntity instanceof Player targetPlayer) {
+                // Player disguise
+                disguiseData.setShapeshiftId(BuiltInRegistries.ENTITY_TYPE.getKey(targetEntity.getType()));
                 disguiseData.setDisguisedPlayer(targetPlayer);
+                // Clear mob disguise
+                disguiseData.mobDisguiseEntity = null;
             } else {
-                // Mob disguise - create persistent entity instance
+                // Mob disguise
                 LivingEntity mobEntity = (LivingEntity) targetEntity.getType().create(entity.level());
                 if (mobEntity != null) {
                     // Copy all data from target to the disguise entity
-                    net.minecraft.nbt.CompoundTag targetNBT = new net.minecraft.nbt.CompoundTag();
+                    CompoundTag targetNBT = new CompoundTag();
                     targetEntity.saveWithoutId(targetNBT);
                     mobEntity.load(targetNBT);
 
@@ -129,8 +131,10 @@ public class DisguiseSpell extends AbstractSpell {
                     disguiseData.setMobDisguiseEntity(mobEntity);
                 }
 
-                // Clear player disguise data
-                disguiseData.setDisguisedPlayer(null);
+                // Clear player disguise data (without syncing)
+                disguiseData.disguisedPlayerUUID = null;
+                disguiseData.disguisedPlayerName = null;
+                disguiseData.disguisedPlayerProfile = null;
             }
 
             entity.addEffect(new MobEffectInstance(IGEffectRegistry.DISGUISED, getDuration(spellLevel, entity), 0, false, false, true));

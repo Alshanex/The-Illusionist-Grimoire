@@ -51,7 +51,8 @@ public class IGClientData {
         existingData.disguisedPlayerProfile = receivedData.getDisguisedPlayerProfile();
 
         // Handle mob disguise entity
-        if (receivedData.getMobDisguiseEntity() != null) {
+        CompoundTag mobNBT = receivedData.getPendingMobNBT();
+        if (mobNBT != null && !mobNBT.isEmpty()) {
             // Get the entity type
             EntityType<?> entityType = BuiltInRegistries.ENTITY_TYPE.get(receivedData.getShapeshiftedEntityId());
 
@@ -62,15 +63,13 @@ public class IGClientData {
                     existingData.mobDisguiseEntity = (LivingEntity) entityType.create(player.level());
                 }
 
-                // Copy NBT data from received entity to our entity
+                // Load NBT data into our entity
                 if (existingData.mobDisguiseEntity != null) {
-                    CompoundTag mobNBT = new CompoundTag();
-                    receivedData.getMobDisguiseEntity().saveWithoutId(mobNBT);
                     existingData.mobDisguiseEntity.load(mobNBT);
                 }
             }
         } else {
-            // Clear mob disguise if none in received data
+            // Clear mob disguise if no NBT data
             existingData.mobDisguiseEntity = null;
         }
     }

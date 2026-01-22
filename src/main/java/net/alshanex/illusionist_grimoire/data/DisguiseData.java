@@ -33,6 +33,7 @@ public class DisguiseData {
 
     // Mob disguise data
     public @Nullable LivingEntity mobDisguiseEntity;
+    private @Nullable CompoundTag pendingMobNBT;
 
     public DisguiseData(int serverPlayerId) {
         this.serverPlayerId = serverPlayerId;
@@ -132,10 +133,14 @@ public class DisguiseData {
     private void loadMobEntityFromNBT(CompoundTag nbt) {
         if (nbt == null || nbt.isEmpty()) {
             this.mobDisguiseEntity = null;
+            this.pendingMobNBT = null;
             return;
         }
 
+        // If we don't have a living entity reference yet (client-side during packet deserialization),
+        // store the NBT for later when IGClientData processes it
         if (livingEntity == null || livingEntity.level() == null) {
+            this.pendingMobNBT = nbt.copy();
             return;
         }
 
@@ -152,6 +157,9 @@ public class DisguiseData {
                 this.mobDisguiseEntity.load(nbt);
             }
         }
+
+        // Clear pending NBT since we've processed it
+        this.pendingMobNBT = null;
     }
 
     // ========== PLAYER DISGUISE METHODS (UNCHANGED) ==========
@@ -167,6 +175,11 @@ public class DisguiseData {
             this.disguisedPlayerProfile = null;
         }
         doSync();
+    }
+
+    @Nullable
+    public CompoundTag getPendingMobNBT() {
+        return pendingMobNBT;
     }
 
     @Nullable
