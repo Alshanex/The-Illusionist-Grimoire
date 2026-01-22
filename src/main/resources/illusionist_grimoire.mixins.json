@@ -17,7 +17,14 @@
     "SkipBlockRenderingMixin",
     "AbstractClientPlayerMixin",
     "PlayerRendererMixin",
-    "EntityDimensionsMixin"
+    "EntityDimensionsMixin",
+    "WalkAnimationStateAccessor",
+    "EntityAccessor",
+    "AquaticMovementMixin",
+    "ParrotAccessor",
+    "SquidAccessor",
+    "SquidTickTrackerMixin",
+    "PlayerLightLevelMixin"
   ],
   "injectors": {
     "defaultRequire": 1

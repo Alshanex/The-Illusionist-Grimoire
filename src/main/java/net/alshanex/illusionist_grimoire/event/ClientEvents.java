@@ -9,10 +9,12 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.model.EntityModel;
 import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.GlowSquid;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.neoforged.api.distmarker.Dist;
@@ -22,6 +24,7 @@ import net.neoforged.neoforge.client.event.RenderGuiLayerEvent;
 import net.neoforged.neoforge.client.event.RenderLivingEvent;
 import net.neoforged.neoforge.client.event.RenderNameTagEvent;
 import net.neoforged.neoforge.client.event.RenderPlayerEvent;
+import net.neoforged.neoforge.event.tick.PlayerTickEvent;
 
 import java.util.Arrays;
 
@@ -47,6 +50,32 @@ public class ClientEvents {
 				&& mc.options.getCameraType() == CameraType.FIRST_PERSON
 				&& player.hasEffect(IGEffectRegistry.DISGUISED)) {
 			event.setCanceled(true);
+		}
+	}
+
+	@SubscribeEvent
+	public static void onClientPlayerTick(PlayerTickEvent.Post event) {
+		if (event.getEntity() instanceof LocalPlayer player) {
+			// Check if player is disguised
+			if (player.hasEffect(IGEffectRegistry.DISGUISED)) {
+				var disguiseData = IGClientData.getDisguiseData(player);
+
+				// Check if disguised as glow squid
+				if (!disguiseData.isDisguisedAsPlayer()) {
+					LivingEntity mobEntity = disguiseData.getMobDisguiseEntity();
+
+					if (mobEntity instanceof GlowSquid) {
+						// Spawn glow particles around the player (same as GlowSquid.aiStep())
+						player.level().addParticle(
+								ParticleTypes.GLOW,
+								player.getRandomX(0.6),
+								player.getRandomY(),
+								player.getRandomZ(0.6),
+								0.0, 0.0, 0.0
+						);
+					}
+				}
+			}
 		}
 	}
 
