@@ -82,11 +82,6 @@ public abstract class PlayerRendererMixin extends LivingEntityRenderer<AbstractC
 
             renderer.render(mobEntity, yaw, partialTicks, poseStack, buffer, light);
 
-            // Render nametag if enabled
-            if (player != Minecraft.getInstance().player) {
-                this.renderNameTag(player, player.getDisplayName(), poseStack, buffer, light, partialTicks);
-            }
-
             ci.cancel(); // Cancel vanilla player rendering
         }
     }

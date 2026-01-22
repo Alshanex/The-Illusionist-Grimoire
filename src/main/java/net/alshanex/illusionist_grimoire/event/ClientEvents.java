@@ -38,6 +38,9 @@ public class ClientEvents {
 			if (disguiseData.isDisguisedAsPlayer() && disguiseData.getDisguisedPlayerName() != null) {
 				event.setContent(Component.literal(disguiseData.getDisguisedPlayerName()));
 			}
+			if (!disguiseData.isDisguisedAsPlayer()) {
+				event.setContent(Component.empty());
+			}
 		}
 	}
 
