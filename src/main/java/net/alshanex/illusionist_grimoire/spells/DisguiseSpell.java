@@ -33,7 +33,7 @@ import java.util.List;
 import java.util.Optional;
 
 public class DisguiseSpell extends AbstractSpell {
-    //Credits to Snackpirate for this :)
+    //Credits to Snackpirate and xGabou since i took some of their code as inspiration :)
 
     private final ResourceLocation spellId = ResourceLocation.fromNamespaceAndPath(IllusionistGrimoireMod.MODID, "disguise");
 
