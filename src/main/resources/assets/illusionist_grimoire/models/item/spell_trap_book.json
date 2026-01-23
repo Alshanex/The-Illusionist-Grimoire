@@ -4,7 +4,7 @@
   "base": {
     "textures": {
       "book": "illusionist_grimoire:item/spell_trap_book",
-      "particle": "illusionist_grimoire:item/spell_book_models/spell_trap_book"
+      "particle": "illusionist_grimoire:item/spell_trap_book"
     },
     "parent": "irons_spellbooks:item/template_spell_book_model"
   },
@@ -17,8 +17,8 @@
     },
     "head": {
       "textures": {
-        "book": "illusionist_grimoire:item/spell_book_models/spell_trap_book",
-        "particle": "illusionist_grimoire:item/spell_book_models/spell_trap_book"
+        "book": "illusionist_grimoire:item/spell_trap_book",
+        "particle": "illusionist_grimoire:item/spell_trap_book"
       },
       "parent": "irons_spellbooks:item/template_spell_book_model_open"
     }

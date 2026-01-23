@@ -1,0 +1,37 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "B": {
+      "item": "irons_spellbooks:chained_book"
+    },
+    "S": {
+      "item": "irons_spellbooks:scroll",
+      "components": {
+        "irons_spellbooks:spell_container": {
+          "maxSpells": 1,
+          "spellWheel": false,
+          "mustEquip": false,
+          "improved": false,
+          "data": [
+            {
+              "id": "illusionist_grimoire:disguise",
+              "level": 1,
+              "index": 0,
+              "locked": true
+            }
+          ]
+        }
+      }
+    }
+  },
+  "pattern": [
+    "SSS",
+    "SBS",
+    "SSS"
+  ],
+  "result": {
+    "count": 1,
+    "id": "illusionist_grimoire:picture_book"
+  }
+}

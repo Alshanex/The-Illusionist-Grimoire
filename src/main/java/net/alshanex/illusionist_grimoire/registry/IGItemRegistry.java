@@ -17,7 +17,7 @@ public class IGItemRegistry {
         ITEMS.register(eventBus);
     }
 
-    public static final DeferredHolder<Item, Item> MAGIC_TRAP_ITEM = ITEMS.register("magic_trap_item",
+    public static final DeferredHolder<Item, Item> MAGIC_TRAP_ITEM = ITEMS.register("spell_trap_book",
             () -> new MagicTrapItem(new Item.Properties().stacksTo(1)));
 
     public static final DeferredHolder<Item, Item> PICTURE_BOOK = ITEMS.register("picture_book",
