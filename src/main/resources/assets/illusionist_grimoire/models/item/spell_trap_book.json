@@ -3,8 +3,8 @@
   "loader": "neoforge:separate_transforms",
   "base": {
     "textures": {
-      "book": "illusionist_grimoire:item/spell_trap_book",
-      "particle": "illusionist_grimoire:item/spell_trap_book"
+      "book": "illusionist_grimoire:item/book_models/spell_trap_book",
+      "particle": "illusionist_grimoire:item/book_models/spell_trap_book"
     },
     "parent": "irons_spellbooks:item/template_spell_book_model"
   },
@@ -12,13 +12,13 @@
     "gui": {
       "parent": "item/generated",
       "textures": {
-        "layer0": "illusionist_grimoire:item/magic_trap_item"
+        "layer0": "illusionist_grimoire:item/spell_trap_book"
       }
     },
     "head": {
       "textures": {
-        "book": "illusionist_grimoire:item/spell_trap_book",
-        "particle": "illusionist_grimoire:item/spell_trap_book"
+        "book": "illusionist_grimoire:item/book_models/spell_trap_book",
+        "particle": "illusionist_grimoire:item/book_models/spell_trap_book"
       },
       "parent": "irons_spellbooks:item/template_spell_book_model_open"
     }
