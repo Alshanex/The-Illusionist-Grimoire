@@ -1,6 +1,26 @@
 {
-  "parent": "item/generated",
-  "textures": {
-    "layer0": "illusionist_grimoire:item/magic_trap_item"
+  "parent": "minecraft:item/handheld",
+  "loader": "neoforge:separate_transforms",
+  "base": {
+    "textures": {
+      "book": "illusionist_grimoire:item/spell_trap_book",
+      "particle": "illusionist_grimoire:item/spell_book_models/spell_trap_book"
+    },
+    "parent": "irons_spellbooks:item/template_spell_book_model"
+  },
+  "perspectives": {
+    "gui": {
+      "parent": "item/generated",
+      "textures": {
+        "layer0": "illusionist_grimoire:item/magic_trap_item"
+      }
+    },
+    "head": {
+      "textures": {
+        "book": "illusionist_grimoire:item/spell_book_models/spell_trap_book",
+        "particle": "illusionist_grimoire:item/spell_book_models/spell_trap_book"
+      },
+      "parent": "irons_spellbooks:item/template_spell_book_model_open"
+    }
   }
 }
