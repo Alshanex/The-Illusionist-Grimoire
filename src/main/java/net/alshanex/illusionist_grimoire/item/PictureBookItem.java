@@ -119,7 +119,6 @@ public class PictureBookItem extends Item {
             return InteractionResultHolder.success(stack);
         }
 
-        // No emerald - disguise mode
         // Check if slot has disguise
         if (!hasDisguiseInSlot(stack, slot)) {
             if (player instanceof ServerPlayer serverPlayer) {
@@ -191,7 +190,7 @@ public class PictureBookItem extends Item {
         List<LivingEntity> entities = player.level().getEntitiesOfClass(
                 LivingEntity.class,
                 searchBox,
-                entity -> entity != player && entity.isAlive() && entity.isPickable()
+                entity -> entity != player && entity.isAlive()
         );
 
         LivingEntity closestEntity = null;

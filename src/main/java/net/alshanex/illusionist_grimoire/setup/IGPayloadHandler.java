@@ -2,6 +2,7 @@ package net.alshanex.illusionist_grimoire.setup;
 
 import net.alshanex.illusionist_grimoire.IllusionistGrimoireMod;
 import net.alshanex.illusionist_grimoire.data.IGClientData;
+import net.alshanex.illusionist_grimoire.network.ClearDisguiseSlotPacket;
 import net.alshanex.illusionist_grimoire.network.IGSyncEntityDataPacket;
 import net.alshanex.illusionist_grimoire.network.IGSyncPlayerDataPacket;
 import net.alshanex.illusionist_grimoire.network.SelectDisguiseSlotPacket;
@@ -26,5 +27,6 @@ public class IGPayloadHandler {
         );
 
         payloadRegistrar.playToServer(SelectDisguiseSlotPacket.TYPE, SelectDisguiseSlotPacket.STREAM_CODEC, SelectDisguiseSlotPacket::handle);
+        payloadRegistrar.playToServer(ClearDisguiseSlotPacket.TYPE, ClearDisguiseSlotPacket.STREAM_CODEC, ClearDisguiseSlotPacket::handle);
     }
 }

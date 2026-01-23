@@ -1,7 +1,9 @@
 package net.alshanex.illusionist_grimoire.screen;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import net.alshanex.illusionist_grimoire.IllusionistGrimoireMod;
 import net.alshanex.illusionist_grimoire.item.PictureBookItem;
+import net.alshanex.illusionist_grimoire.network.ClearDisguiseSlotPacket;
 import net.alshanex.illusionist_grimoire.network.SelectDisguiseSlotPacket;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -17,104 +19,101 @@ import net.neoforged.neoforge.network.PacketDistributor;
 import org.joml.Quaternionf;
 
 public class DisguiseSelectionScreen extends Screen {
-    private final ItemStack amuletStack;
+    private static final ResourceLocation GUI_TEXTURE =
+            ResourceLocation.fromNamespaceAndPath(IllusionistGrimoireMod.MODID, "textures/gui/picture_book_gui.png");
+
+    private final ItemStack pictureBookStack;
     private int selectedSlot;
 
-    private static final int SLOT_SIZE = 40;
-    private static final int SLOT_PADDING = 8;
-    private static final int SLOTS_PER_ROW = 4;
-    private static final int TITLE_HEIGHT = 20;
+    // GUI texture dimensions
+    private static final int GUI_WIDTH = 255;
+    private static final int GUI_HEIGHT = 152;
 
-    private int gridStartX;
-    private int gridStartY;
+    // Slot dimensions
+    private static final int SLOT_WIDTH = 26;
+    private static final int SLOT_HEIGHT = 29;
 
-    public DisguiseSelectionScreen(ItemStack amuletStack) {
+    // Slot positions
+    private static final SlotPosition[] SLOT_POSITIONS = {
+            new SlotPosition(31, 40),   // Slot 1
+            new SlotPosition(80, 40),   // Slot 2
+            new SlotPosition(31, 95),   // Slot 3
+            new SlotPosition(80, 95),   // Slot 4
+            new SlotPosition(149, 40),  // Slot 5
+            new SlotPosition(198, 40),  // Slot 6
+            new SlotPosition(149, 95),  // Slot 7
+            new SlotPosition(198, 95)   // Slot 8
+    };
+
+    private int guiLeft;
+    private int guiTop;
+
+    public DisguiseSelectionScreen(ItemStack pictureBookStack) {
         super(Component.translatable("gui.illusionist_grimoire.disguise_selection"));
-        this.amuletStack = amuletStack;
-        this.selectedSlot = PictureBookItem.getSelectedSlot(amuletStack);
+        this.pictureBookStack = pictureBookStack;
+        this.selectedSlot = PictureBookItem.getSelectedSlot(pictureBookStack);
     }
 
     @Override
     protected void init() {
         super.init();
 
-        // Calculate grid position (centered)
-        int totalWidth = SLOTS_PER_ROW * SLOT_SIZE + (SLOTS_PER_ROW - 1) * SLOT_PADDING;
-        int totalHeight = 2 * SLOT_SIZE + SLOT_PADDING;
-
-        this.gridStartX = (this.width - totalWidth) / 2;
-        this.gridStartY = (this.height - totalHeight) / 2 + TITLE_HEIGHT;
+        // Center the GUI
+        this.guiLeft = (this.width - GUI_WIDTH) / 2;
+        this.guiTop = (this.height - GUI_HEIGHT) / 2;
     }
 
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-        // Semi-transparent background
-        graphics.fillGradient(0, 0, this.width, this.height, 0xC0101010, 0xD0101010);
+        // Render background
+        this.renderBackground(graphics, mouseX, mouseY, partialTick);
 
-        // Title
-        graphics.drawCenteredString(this.font, this.title, this.width / 2, this.gridStartY - TITLE_HEIGHT, 0xFFFFFF);
+        // Render the GUI texture
+        graphics.blit(GUI_TEXTURE, guiLeft, guiTop, 0, 0, 255, 152, 255, 255);
 
-        // Render slots
+        // Render entities in slots
         for (int i = 0; i < PictureBookItem.getMaxSlots(); i++) {
             renderSlot(graphics, i, mouseX, mouseY, partialTick);
         }
-
-        // Instructions
-        Component instructions = Component.translatable("gui.illusionist_grimoire.disguise_selection.instructions");
-        graphics.drawCenteredString(this.font, instructions, this.width / 2, this.gridStartY + 2 * SLOT_SIZE + SLOT_PADDING + 20, 0xAAAAAA);
 
         super.render(graphics, mouseX, mouseY, partialTick);
     }
 
     private void renderSlot(GuiGraphics graphics, int slot, int mouseX, int mouseY, float partialTick) {
-        int row = slot / SLOTS_PER_ROW;
-        int col = slot % SLOTS_PER_ROW;
+        SlotPosition pos = SLOT_POSITIONS[slot];
+        int slotX = guiLeft + pos.x;
+        int slotY = guiTop + pos.y;
 
-        int x = gridStartX + col * (SLOT_SIZE + SLOT_PADDING);
-        int y = gridStartY + row * (SLOT_SIZE + SLOT_PADDING);
-
-        boolean isHovered = mouseX >= x && mouseX < x + SLOT_SIZE && mouseY >= y && mouseY < y + SLOT_SIZE;
+        boolean isHovered = mouseX >= slotX && mouseX < slotX + SLOT_WIDTH &&
+                mouseY >= slotY && mouseY < slotY + SLOT_HEIGHT;
         boolean isSelected = slot == selectedSlot;
 
-        // Slot background
-        int backgroundColor = isSelected ? 0xFF4A4A4A : (isHovered ? 0xFF3A3A3A : 0xFF2A2A2A);
-        graphics.fill(x, y, x + SLOT_SIZE, y + SLOT_SIZE, backgroundColor);
-
-        // Border
-        int borderColor = isSelected ? 0xFF00FF00 : (isHovered ? 0xFFFFFFFF : 0xFF8B8B8B);
-        // Top
-        graphics.fill(x, y, x + SLOT_SIZE, y + 1, borderColor);
-        // Bottom
-        graphics.fill(x, y + SLOT_SIZE - 1, x + SLOT_SIZE, y + SLOT_SIZE, borderColor);
-        // Left
-        graphics.fill(x, y, x + 1, y + SLOT_SIZE, borderColor);
-        // Right
-        graphics.fill(x + SLOT_SIZE - 1, y, x + SLOT_SIZE, y + SLOT_SIZE, borderColor);
-
-        // Slot number
-        String slotNumber = String.valueOf(slot + 1);
-        graphics.drawString(this.font, slotNumber, x + 2, y + 2, 0xFFFFFF);
+        // Render selection highlight
+        if (isSelected) {
+            // Green border for selected slot (1px wide)
+            graphics.fill(slotX - 1, slotY - 1, slotX + SLOT_WIDTH + 1, slotY, 0xFF00FF00); // Top
+            graphics.fill(slotX - 1, slotY + SLOT_HEIGHT, slotX + SLOT_WIDTH + 1, slotY + SLOT_HEIGHT + 1, 0xFF00FF00); // Bottom
+            graphics.fill(slotX - 1, slotY, slotX, slotY + SLOT_HEIGHT, 0xFF00FF00); // Left
+            graphics.fill(slotX + SLOT_WIDTH, slotY, slotX + SLOT_WIDTH + 1, slotY + SLOT_HEIGHT, 0xFF00FF00); // Right
+        } else if (isHovered) {
+            // White highlight for hover
+            graphics.fill(slotX - 1, slotY - 1, slotX + SLOT_WIDTH + 1, slotY, 0x80FFFFFF);
+            graphics.fill(slotX - 1, slotY + SLOT_HEIGHT, slotX + SLOT_WIDTH + 1, slotY + SLOT_HEIGHT + 1, 0x80FFFFFF);
+            graphics.fill(slotX - 1, slotY, slotX, slotY + SLOT_HEIGHT, 0x80FFFFFF);
+            graphics.fill(slotX + SLOT_WIDTH, slotY, slotX + SLOT_WIDTH + 1, slotY + SLOT_HEIGHT, 0x80FFFFFF);
+        }
 
         // Render entity if present
-        PictureBookItem.SlotData slotData = PictureBookItem.getSlotData(amuletStack, slot);
+        PictureBookItem.SlotData slotData = PictureBookItem.getSlotData(pictureBookStack, slot);
         if (slotData != null) {
             EntityType<?> entityType = BuiltInRegistries.ENTITY_TYPE.get(slotData.entityType());
             if (entityType != null) {
                 LivingEntity entity = (LivingEntity) entityType.create(Minecraft.getInstance().level);
                 if (entity != null) {
                     entity.load(slotData.nbt());
-                    int numberSpace = 12; // Space occupied by slot number at top
-                    int availableHeight = SLOT_SIZE - numberSpace;
-                    int entityCenterY = y + numberSpace + (availableHeight / 2);
-                    renderEntity(graphics, x + SLOT_SIZE / 2, entityCenterY, entity);
+                    renderEntity(graphics, slotX + SLOT_WIDTH / 2, slotY + SLOT_HEIGHT / 2 + 3, entity);
                 }
             }
-        } else {
-            // Empty slot indicator
-            Component emptyText = Component.literal("?");
-            int textX = x + (SLOT_SIZE - this.font.width(emptyText)) / 2;
-            int textY = y + (SLOT_SIZE - this.font.lineHeight) / 2;
-            graphics.drawString(this.font, emptyText, textX, textY, 0x666666);
         }
 
         // Tooltip on hover
@@ -131,45 +130,41 @@ public class DisguiseSelectionScreen extends Screen {
         float entityHeight = entity.getBbHeight();
         float entityWidth = entity.getBbWidth();
 
-        // Account for slot number space at top (12px)
-        // Available space in slot: 40x40, minus 12px for number = ~28px vertically, 40px horizontally
-        // Use 26px to leave some margin
-        float targetVerticalSize = 26.0f;
-        float targetHorizontalSize = 30.0f;
+        // Available space: 26x29 slot, use ~24px to leave margin
+        float targetSize = 24.0f;
 
         // Scale to fit within available space
-        float scaleVertical = targetVerticalSize / entityHeight;
-        float scaleHorizontal = targetHorizontalSize / entityWidth;
+        float scaleVertical = targetSize / entityHeight;
+        float scaleHorizontal = targetSize / entityWidth;
         float scale = Math.min(scaleVertical, scaleHorizontal);
-        scale = Math.min(scale, 20.0f); // Cap maximum scale to avoid huge tiny entities
+        scale = Math.min(scale, 15.0f); // Cap maximum scale
 
         graphics.pose().pushPose();
 
-        // Move to slot center first
+        // Move to slot center
         graphics.pose().translate(x, y, 50);
         graphics.pose().scale(scale, scale, scale);
 
-        // Rotate entity - flip upside down and slightly tilt for better view
-        Quaternionf quaternion = new Quaternionf().rotateZ((float) Math.PI); // 180° flip
-        Quaternionf quaternion2 = new Quaternionf().rotateX(10.0f * (float) Math.PI / 180.0f); // Reduced to 10° tilt
+        // Rotate entity
+        Quaternionf quaternion = new Quaternionf().rotateZ((float) Math.PI);
+        Quaternionf quaternion2 = new Quaternionf().rotateX(10.0f * (float) Math.PI / 180.0f);
         quaternion.mul(quaternion2);
         graphics.pose().mulPose(quaternion);
 
-        // Make entity look straight ahead (toward camera)
+        // Make entity look straight ahead
         entity.yBodyRot = 0f;
         entity.setYRot(0f);
         entity.yHeadRot = 0f;
         entity.yHeadRotO = 0f;
-        entity.setXRot(0f);
-        entity.xRotO = 0f;
+        entity.setXRot(0.0f);
+        entity.xRotO = 0.0f;
 
         EntityRenderDispatcher dispatcher = Minecraft.getInstance().getEntityRenderDispatcher();
         quaternion2.conjugate();
         dispatcher.overrideCameraOrientation(quaternion2);
         dispatcher.setRenderShadow(false);
 
-        // Calculate vertical offset to center the entity
-        // Entities render from feet (y=0), so we offset by half height to center them
+        // Center entity vertically
         double yOffset = entityHeight / 2.0;
 
         RenderSystem.runAsFancy(() -> {
@@ -183,31 +178,22 @@ public class DisguiseSelectionScreen extends Screen {
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        // Left click to select slot
-        if (button == 0) {
-            for (int i = 0; i < PictureBookItem.getMaxSlots(); i++) {
-                int row = i / SLOTS_PER_ROW;
-                int col = i % SLOTS_PER_ROW;
+        // Check if clicked on any slot
+        for (int i = 0; i < PictureBookItem.getMaxSlots(); i++) {
+            SlotPosition pos = SLOT_POSITIONS[i];
+            int slotX = guiLeft + pos.x;
+            int slotY = guiTop + pos.y;
 
-                int x = gridStartX + col * (SLOT_SIZE + SLOT_PADDING);
-                int y = gridStartY + row * (SLOT_SIZE + SLOT_PADDING);
+            if (mouseX >= slotX && mouseX < slotX + SLOT_WIDTH &&
+                    mouseY >= slotY && mouseY < slotY + SLOT_HEIGHT) {
 
-                if (mouseX >= x && mouseX < x + SLOT_SIZE && mouseY >= y && mouseY < y + SLOT_SIZE) {
+                // Left click to select
+                if (button == 0) {
                     selectSlot(i);
                     return true;
                 }
-            }
-        }
-        // Right click to clear slot
-        else if (button == 1) {
-            for (int i = 0; i < PictureBookItem.getMaxSlots(); i++) {
-                int row = i / SLOTS_PER_ROW;
-                int col = i % SLOTS_PER_ROW;
-
-                int x = gridStartX + col * (SLOT_SIZE + SLOT_PADDING);
-                int y = gridStartY + row * (SLOT_SIZE + SLOT_PADDING);
-
-                if (mouseX >= x && mouseX < x + SLOT_SIZE && mouseY >= y && mouseY < y + SLOT_SIZE) {
+                // Right click to clear
+                else if (button == 1) {
                     clearSlot(i);
                     return true;
                 }
@@ -219,7 +205,7 @@ public class DisguiseSelectionScreen extends Screen {
 
     private void selectSlot(int slot) {
         this.selectedSlot = slot;
-        PictureBookItem.setSelectedSlot(amuletStack, slot);
+        PictureBookItem.setSelectedSlot(pictureBookStack, slot);
 
         // Send packet to server
         PacketDistributor.sendToServer(new SelectDisguiseSlotPacket(slot));
@@ -234,10 +220,10 @@ public class DisguiseSelectionScreen extends Screen {
     }
 
     private void clearSlot(int slot) {
-        PictureBookItem.clearSlot(amuletStack, slot);
+        PictureBookItem.clearSlot(pictureBookStack, slot);
 
-        // Send packet to server
-        PacketDistributor.sendToServer(new SelectDisguiseSlotPacket(slot));
+        // Send packet to server to clear the slot
+        PacketDistributor.sendToServer(new ClearDisguiseSlotPacket(slot));
 
         // Play sound
         if (minecraft != null && minecraft.player != null) {
@@ -249,12 +235,15 @@ public class DisguiseSelectionScreen extends Screen {
     }
 
     @Override
+    public boolean isPauseScreen() {
+        return false;
+    }
+
+    @Override
     public void renderBackground(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
 
     }
 
-    @Override
-    public boolean isPauseScreen() {
-        return false;
-    }
+    // Helper record for slot positions
+    private record SlotPosition(int x, int y) {}
 }

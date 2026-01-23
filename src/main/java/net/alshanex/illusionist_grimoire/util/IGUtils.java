@@ -28,4 +28,15 @@ public class IGUtils {
             }
         }
     }
+
+    public static void handleSlotClear(Player player, int slot){
+        if (player != null) {
+            InteractionHand hand = InteractionHand.MAIN_HAND;
+            ItemStack stack = player.getItemInHand(hand);
+
+            if (stack.getItem() instanceof PictureBookItem) {
+                PictureBookItem.clearSlot(stack, slot);
+            }
+        }
+    }
 }

@@ -146,11 +146,6 @@ public class DisguiseSpell extends AbstractSpell {
         super.onCast(level, spellLevel, entity, castSource, playerMagicData);
     }
 
-    @Override
-    public boolean allowCrafting() {
-        return false;
-    }
-
     public int getDuration(int spellLevel, LivingEntity caster) {
         return (int) (getSpellPower(spellLevel, caster) * 20);
     }
