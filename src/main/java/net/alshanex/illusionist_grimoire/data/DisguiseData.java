@@ -59,6 +59,21 @@ public class DisguiseData {
         if (data.disguisedPlayerUUID != null) {
             buffer.writeUUID(data.disguisedPlayerUUID);
             buffer.writeUtf(data.disguisedPlayerName);
+
+            // Write skin properties
+            String skinTexture = null;
+            String skinSignature = null;
+            if (data.disguisedPlayerProfile != null && data.disguisedPlayerProfile.getProperties().containsKey("textures")) {
+                var textureProperty = data.disguisedPlayerProfile.getProperties().get("textures").iterator().next();
+                skinTexture = textureProperty.value();
+                skinSignature = textureProperty.signature();
+            }
+
+            buffer.writeBoolean(skinTexture != null);
+            if (skinTexture != null) {
+                buffer.writeUtf(skinTexture);
+                buffer.writeUtf(skinSignature != null ? skinSignature : "");
+            }
         }
 
         // Mob disguise entity NBT
@@ -80,7 +95,24 @@ public class DisguiseData {
         if (hasPlayerData) {
             data.disguisedPlayerUUID = buffer.readUUID();
             data.disguisedPlayerName = buffer.readUtf();
-            data.disguisedPlayerProfile = new GameProfile(data.disguisedPlayerUUID, data.disguisedPlayerName);
+
+            // Read skin properties
+            boolean hasSkinData = buffer.readBoolean();
+            if (hasSkinData) {
+                String skinTexture = buffer.readUtf();
+                String skinSignature = buffer.readUtf();
+
+                // Create GameProfile with skin properties
+                GameProfile profile = new GameProfile(data.disguisedPlayerUUID, data.disguisedPlayerName);
+                if (!skinTexture.isEmpty()) {
+                    profile.getProperties().put("textures",
+                            new com.mojang.authlib.properties.Property("textures", skinTexture,
+                                    skinSignature.isEmpty() ? null : skinSignature));
+                }
+                data.disguisedPlayerProfile = profile;
+            } else {
+                data.disguisedPlayerProfile = new GameProfile(data.disguisedPlayerUUID, data.disguisedPlayerName);
+            }
         }
 
         // Mob disguise entity NBT
@@ -101,13 +133,22 @@ public class DisguiseData {
         if (this.disguisedPlayerUUID != null) {
             compound.putUUID("disguisedPlayerUUID", this.disguisedPlayerUUID);
             compound.putString("disguisedPlayerName", this.disguisedPlayerName);
+
+            // Save skin properties
+            if (this.disguisedPlayerProfile != null && this.disguisedPlayerProfile.getProperties().containsKey("textures")) {
+                var textureProperty = this.disguisedPlayerProfile.getProperties().get("textures").iterator().next();
+                compound.putString("skinTexture", textureProperty.value());
+                if (textureProperty.signature() != null) {
+                    compound.putString("skinSignature", textureProperty.signature());
+                }
+            }
         }
 
         // Mob disguise entity NBT
         if (this.mobDisguiseEntity != null) {
             CompoundTag mobNBT = new CompoundTag();
             this.mobDisguiseEntity.saveWithoutId(mobNBT);
-            compound.put("MobDisguiseData", mobNBT);
+            compound.put("mobDisguiseNBT", mobNBT);
         }
     }
 
@@ -118,13 +159,21 @@ public class DisguiseData {
         if (compound.contains("disguisedPlayerUUID")) {
             this.disguisedPlayerUUID = compound.getUUID("disguisedPlayerUUID");
             this.disguisedPlayerName = compound.getString("disguisedPlayerName");
-            this.disguisedPlayerProfile = new GameProfile(this.disguisedPlayerUUID, this.disguisedPlayerName);
+
+            // Load skin properties
+            GameProfile profile = new GameProfile(this.disguisedPlayerUUID, this.disguisedPlayerName);
+            if (compound.contains("skinTexture")) {
+                String skinTexture = compound.getString("skinTexture");
+                String skinSignature = compound.contains("skinSignature") ? compound.getString("skinSignature") : null;
+                profile.getProperties().put("textures",
+                        new com.mojang.authlib.properties.Property("textures", skinTexture, skinSignature));
+            }
+            this.disguisedPlayerProfile = profile;
         }
 
         // Mob disguise entity NBT
-        if (compound.contains("MobDisguiseData")) {
-            CompoundTag mobNBT = compound.getCompound("MobDisguiseData");
-            loadMobEntityFromNBT(mobNBT);
+        if (compound.contains("mobDisguiseNBT")) {
+            this.pendingMobNBT = compound.getCompound("mobDisguiseNBT");
         }
     }
 
@@ -168,6 +217,29 @@ public class DisguiseData {
             this.disguisedPlayerUUID = player.getUUID();
             this.disguisedPlayerName = player.getName().getString();
             this.disguisedPlayerProfile = player.getGameProfile();
+        } else {
+            this.disguisedPlayerUUID = null;
+            this.disguisedPlayerName = null;
+            this.disguisedPlayerProfile = null;
+        }
+        doSync();
+    }
+
+    public void setDisguisedPlayer(UUID playerUUID, String playerName, @Nullable String skinTexture, @Nullable String skinSignature) {
+        if (playerUUID != null && playerName != null) {
+            this.disguisedPlayerUUID = playerUUID;
+            this.disguisedPlayerName = playerName;
+
+            // Create GameProfile with skin properties
+            GameProfile profile = new GameProfile(playerUUID, playerName);
+
+            if (skinTexture != null) {
+                // Add skin properties to the profile
+                profile.getProperties().put("textures",
+                        new com.mojang.authlib.properties.Property("textures", skinTexture, skinSignature));
+            }
+
+            this.disguisedPlayerProfile = profile;
         } else {
             this.disguisedPlayerUUID = null;
             this.disguisedPlayerName = null;

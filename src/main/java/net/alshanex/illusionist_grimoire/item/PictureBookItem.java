@@ -1,5 +1,6 @@
 package net.alshanex.illusionist_grimoire.item;
 
+import com.mojang.authlib.GameProfile;
 import io.redspace.ironsspellbooks.api.spells.AbstractSpell;
 import io.redspace.ironsspellbooks.api.spells.CastType;
 import io.redspace.ironsspellbooks.api.spells.ISpellContainer;
@@ -38,13 +39,9 @@ import net.neoforged.neoforge.network.PacketDistributor;
 import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 public class PictureBookItem extends Item {
-    private static final String TAG_PICTURE_BOOK = "PictureBook";
-    private static final String TAG_SELECTED_SLOT = "SelectedSlot";
-    private static final String TAG_SLOTS = "Slots";
-    private static final String TAG_ENTITY_TYPE = "EntityType";
-    private static final String TAG_ENTITY_NBT = "EntityNBT";
     private static final int MAX_SLOTS = 8;
     private static final int DISGUISE_DURATION = 1200; // 1 minute (20 ticks/sec * 60 sec)
 
@@ -63,7 +60,7 @@ public class PictureBookItem extends Item {
         ItemStack offhand = player.getOffhandItem();
         int slot = getSelectedSlot(stack);
 
-        // Check if player has emerald in offhand - binding mode
+        // binding mode
         if (isBindingItem(offhand)) {
             // Raycast to find entity
             LivingEntity targetEntity = getTargetEntity(player, 10.0);
@@ -93,27 +90,54 @@ public class PictureBookItem extends Item {
                 return InteractionResultHolder.fail(stack);
             }
 
-            // Save entity data to selected slot
-            CompoundTag entityNBT = new CompoundTag();
-            targetEntity.saveWithoutId(entityNBT);
-            ResourceLocation entityType = BuiltInRegistries.ENTITY_TYPE.getKey(targetEntity.getType());
+            // Check if target is a player
+            if (targetEntity instanceof Player targetPlayer) {
+                String skinTexture = null;
+                String skinSignature = null;
 
-            setSlotData(stack, slot, entityType, entityNBT);
+                GameProfile profile = targetPlayer.getGameProfile();
+                if (profile.getProperties().containsKey("textures")) {
+                    var textureProperty = profile.getProperties().get("textures").iterator().next();
+                    skinTexture = textureProperty.value();
+                    skinSignature = textureProperty.signature();
+                }
 
-            // Consume emerald
-            if (!player.isCreative()) {
-                offhand.shrink(1);
+                // Store player-specific data with skin
+                setPlayerSlotData(stack, slot, targetPlayer.getUUID(), targetPlayer.getName().getString(), skinTexture, skinSignature);
+
+                // Success feedback
+                if (player instanceof ServerPlayer serverPlayer) {
+                    serverPlayer.connection.send(
+                            new ClientboundSetActionBarTextPacket(
+                                    Component.translatable("message.illusionist_grimoire.picture_book.entity_bound",
+                                                    slot + 1, targetPlayer.getDisplayName())
+                                            .withStyle(ChatFormatting.GREEN)
+                            )
+                    );
+                }
+            } else {
+                // Save entity data to selected slot
+                CompoundTag entityNBT = new CompoundTag();
+                targetEntity.saveWithoutId(entityNBT);
+                ResourceLocation entityType = BuiltInRegistries.ENTITY_TYPE.getKey(targetEntity.getType());
+
+                setSlotData(stack, slot, entityType, entityNBT);
+
+                // Success feedback
+                if (player instanceof ServerPlayer serverPlayer) {
+                    serverPlayer.connection.send(
+                            new ClientboundSetActionBarTextPacket(
+                                    Component.translatable("message.illusionist_grimoire.picture_book.entity_bound",
+                                                    slot + 1, targetEntity.getDisplayName())
+                                            .withStyle(ChatFormatting.GREEN)
+                            )
+                    );
+                }
             }
 
-            // Success feedback
-            if (player instanceof ServerPlayer serverPlayer) {
-                serverPlayer.connection.send(
-                        new ClientboundSetActionBarTextPacket(
-                                Component.translatable("message.illusionist_grimoire.picture_book.entity_bound",
-                                                slot + 1, targetEntity.getDisplayName())
-                                        .withStyle(ChatFormatting.GREEN)
-                        )
-                );
+            // Consume
+            if (!player.isCreative()) {
+                offhand.shrink(1);
             }
 
             return InteractionResultHolder.success(stack);
@@ -133,34 +157,64 @@ public class PictureBookItem extends Item {
         }
 
         // Get slot data
-        SlotData slotData = getSlotData(stack, slot);
+        PictureBookData.SlotData slotData = getSlotData(stack, slot);
         if (slotData == null) {
             return InteractionResultHolder.fail(stack);
         }
 
-        // Create mob entity
-        EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.get(slotData.entityType());
-        if (type == null) {
-            return InteractionResultHolder.fail(stack);
-        }
+        DisguiseData disguiseData = DisguiseData.getDisguiseData(player);
 
-        LivingEntity mobEntity = (LivingEntity) type.create(level);
-        if (mobEntity != null) {
-            mobEntity.load(slotData.nbt());
-
-            // Apply disguise
-            DisguiseData disguiseData = DisguiseData.getDisguiseData(player);
-            disguiseData.setMobDisguiseEntity(mobEntity);
+        // Check if it's a player disguise
+        if (slotData.isPlayerDisguise()) {
+            // Apply player disguise with skin properties
+            disguiseData.setDisguisedPlayer(
+                    slotData.playerUUID(),
+                    slotData.playerName(),
+                    slotData.skinTexture(),
+                    slotData.skinSignature()
+            );
 
             PacketDistributor.sendToPlayersTrackingEntityAndSelf(player, new IGSyncPlayerDataPacket(disguiseData));
-
-            // Apply effect
-            player.addEffect(new MobEffectInstance(IGEffectRegistry.DISGUISED, DISGUISE_DURATION, 0));
+            player.addEffect(new MobEffectInstance(IGEffectRegistry.DISGUISED, DISGUISE_DURATION, 0, false, false));
 
             return InteractionResultHolder.success(stack);
+        } else {
+            disguiseData.disguisedPlayerUUID = null;
+            disguiseData.disguisedPlayerName = null;
+            disguiseData.disguisedPlayerProfile = null;
+
+            // Create mob entity
+            EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.get(slotData.entityType());
+            if (type == null) {
+                return InteractionResultHolder.fail(stack);
+            }
+
+            LivingEntity mobEntity = (LivingEntity) type.create(level);
+            if (mobEntity != null) {
+                mobEntity.load(slotData.nbt());
+
+                // Apply disguise
+                disguiseData.setMobDisguiseEntity(mobEntity);
+
+                PacketDistributor.sendToPlayersTrackingEntityAndSelf(player, new IGSyncPlayerDataPacket(disguiseData));
+
+                // Apply effect
+                player.addEffect(new MobEffectInstance(IGEffectRegistry.DISGUISED, DISGUISE_DURATION, 0, false, false));
+
+                return InteractionResultHolder.success(stack);
+            }
         }
 
         return InteractionResultHolder.fail(stack);
+    }
+
+    public static void setPlayerSlotData(ItemStack stack, int slot, UUID playerUUID, String playerName, @Nullable String skinTexture, @Nullable String skinSignature) {
+        if (slot < 0 || slot >= MAX_SLOTS) {
+            return;
+        }
+        PictureBookData data = stack.getOrDefault(IGDataComponents.PICTURE_BOOK_DATA, PictureBookData.DEFAULT);
+        PictureBookData.SlotData slotData = new PictureBookData.SlotData(playerUUID, playerName, skinTexture, skinSignature);
+        stack.set(IGDataComponents.PICTURE_BOOK_DATA, data.withSlot(slot, slotData));
     }
 
     private boolean isBindingItem(ItemStack item){
@@ -222,11 +276,15 @@ public class PictureBookItem extends Item {
         int selectedSlot = getSelectedSlot(stack);
         tooltipComponents.add(Component.translatable("tooltip.illusionist_grimoire.picture_book.selected_slot", selectedSlot + 1));
 
-        SlotData slotData = getSlotData(stack, selectedSlot);
+        PictureBookData.SlotData slotData = getSlotData(stack, selectedSlot);
         if (slotData != null) {
-            EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.get(slotData.entityType());
-            if (type != null) {
-                tooltipComponents.add(Component.translatable("tooltip.illusionist_grimoire.picture_book.bound", type.getDescription()));
+            if (slotData.isPlayerDisguise()) {
+                tooltipComponents.add(Component.translatable("tooltip.illusionist_grimoire.picture_book.bound", slotData.playerName()));
+            } else {
+                EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.get(slotData.entityType());
+                if (type != null) {
+                    tooltipComponents.add(Component.translatable("tooltip.illusionist_grimoire.picture_book.bound", type.getDescription()));
+                }
             }
         } else {
             tooltipComponents.add(Component.translatable("tooltip.illusionist_grimoire.picture_book.empty"));
@@ -249,18 +307,12 @@ public class PictureBookItem extends Item {
     }
 
     @Nullable
-    public static SlotData getSlotData(ItemStack stack, int slot) {
+    public static PictureBookData.SlotData getSlotData(ItemStack stack, int slot) {
         if (slot < 0 || slot >= MAX_SLOTS) {
             return null;
         }
         PictureBookData data = stack.getOrDefault(IGDataComponents.PICTURE_BOOK_DATA, PictureBookData.DEFAULT);
-        PictureBookData.SlotData componentSlot = data.slots().get(slot);
-
-        if (componentSlot == null) {
-            return null;
-        }
-
-        return new SlotData(componentSlot.entityType(), componentSlot.nbt());
+        return data.slots().get(slot);
     }
 
     public static void setSlotData(ItemStack stack, int slot, ResourceLocation entityType, CompoundTag entityNBT) {
@@ -287,8 +339,4 @@ public class PictureBookItem extends Item {
     public static int getMaxSlots() {
         return MAX_SLOTS;
     }
-
-    // === Helper Record ===
-
-    public record SlotData(ResourceLocation entityType, CompoundTag nbt) {}
 }

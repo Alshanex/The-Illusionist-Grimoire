@@ -1,14 +1,18 @@
 package net.alshanex.illusionist_grimoire.screen;
 
+import com.mojang.authlib.GameProfile;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.alshanex.illusionist_grimoire.IllusionistGrimoireMod;
+import net.alshanex.illusionist_grimoire.data.PictureBookData;
 import net.alshanex.illusionist_grimoire.item.PictureBookItem;
 import net.alshanex.illusionist_grimoire.network.ClearDisguiseSlotPacket;
 import net.alshanex.illusionist_grimoire.network.SelectDisguiseSlotPacket;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
+import net.minecraft.client.renderer.entity.player.PlayerRenderer;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -17,6 +21,9 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.network.PacketDistributor;
 import org.joml.Quaternionf;
+
+import javax.annotation.Nullable;
+import java.util.UUID;
 
 public class DisguiseSelectionScreen extends Screen {
     private static final ResourceLocation GUI_TEXTURE =
@@ -91,10 +98,10 @@ public class DisguiseSelectionScreen extends Screen {
         // Render selection highlight
         if (isSelected) {
             // Green border for selected slot (1px wide)
-            graphics.fill(slotX - 1, slotY - 1, slotX + SLOT_WIDTH + 1, slotY, 0xFF00FF00); // Top
-            graphics.fill(slotX - 1, slotY + SLOT_HEIGHT, slotX + SLOT_WIDTH + 1, slotY + SLOT_HEIGHT + 1, 0xFF00FF00); // Bottom
-            graphics.fill(slotX - 1, slotY, slotX, slotY + SLOT_HEIGHT, 0xFF00FF00); // Left
-            graphics.fill(slotX + SLOT_WIDTH, slotY, slotX + SLOT_WIDTH + 1, slotY + SLOT_HEIGHT, 0xFF00FF00); // Right
+            graphics.fill(slotX - 1, slotY - 1, slotX + SLOT_WIDTH + 1, slotY, 0xFF00FF00);
+            graphics.fill(slotX - 1, slotY + SLOT_HEIGHT, slotX + SLOT_WIDTH + 1, slotY + SLOT_HEIGHT + 1, 0xFF00FF00);
+            graphics.fill(slotX - 1, slotY, slotX, slotY + SLOT_HEIGHT, 0xFF00FF00);
+            graphics.fill(slotX + SLOT_WIDTH, slotY, slotX + SLOT_WIDTH + 1, slotY + SLOT_HEIGHT, 0xFF00FF00);
         } else if (isHovered) {
             // White highlight for hover
             graphics.fill(slotX - 1, slotY - 1, slotX + SLOT_WIDTH + 1, slotY, 0x80FFFFFF);
@@ -104,25 +111,99 @@ public class DisguiseSelectionScreen extends Screen {
         }
 
         // Render entity if present
-        PictureBookItem.SlotData slotData = PictureBookItem.getSlotData(pictureBookStack, slot);
+        PictureBookData.SlotData slotData = PictureBookItem.getSlotData(pictureBookStack, slot);
         if (slotData != null) {
-            EntityType<?> entityType = BuiltInRegistries.ENTITY_TYPE.get(slotData.entityType());
-            if (entityType != null) {
-                LivingEntity entity = (LivingEntity) entityType.create(Minecraft.getInstance().level);
-                if (entity != null) {
-                    entity.load(slotData.nbt());
-                    renderEntity(graphics, slotX + SLOT_WIDTH / 2, slotY + SLOT_HEIGHT / 2 + 3, entity);
+            if (slotData.isPlayerDisguise()) {
+                // Render player model with skin
+                renderPlayerModel(graphics, slotX + SLOT_WIDTH / 2, slotY + SLOT_HEIGHT - 3,
+                        slotData.playerUUID(), slotData.playerName(),
+                        slotData.skinTexture(), slotData.skinSignature());
+            } else {
+                // Render mob entity
+                EntityType<?> entityType = BuiltInRegistries.ENTITY_TYPE.get(slotData.entityType());
+                if (entityType != null) {
+                    LivingEntity entity = (LivingEntity) entityType.create(Minecraft.getInstance().level);
+                    if (entity != null) {
+                        entity.load(slotData.nbt());
+                        renderEntity(graphics, slotX + SLOT_WIDTH / 2, slotY + SLOT_HEIGHT / 2 + 3, entity);
+                    }
                 }
             }
         }
 
         // Tooltip on hover
         if (isHovered && slotData != null) {
-            EntityType<?> entityType = BuiltInRegistries.ENTITY_TYPE.get(slotData.entityType());
-            if (entityType != null) {
-                graphics.renderTooltip(this.font, entityType.getDescription(), mouseX, mouseY);
+            if (slotData.isPlayerDisguise()) {
+                graphics.renderTooltip(this.font, Component.literal(slotData.playerName()), mouseX, mouseY);
+            } else {
+                EntityType<?> entityType = BuiltInRegistries.ENTITY_TYPE.get(slotData.entityType());
+                if (entityType != null) {
+                    graphics.renderTooltip(this.font, entityType.getDescription(), mouseX, mouseY);
+                }
             }
         }
+    }
+
+    private void renderPlayerModel(GuiGraphics graphics, int x, int y, UUID playerUUID, String playerName, @Nullable String skinTexture, @Nullable String skinSignature) {
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.level == null || mc.player == null) return;
+
+        // Create GameProfile with skin properties
+        GameProfile profile = new GameProfile(playerUUID, playerName);
+
+        if (skinTexture != null) {
+            profile.getProperties().put("textures",
+                    new com.mojang.authlib.properties.Property("textures", skinTexture, skinSignature));
+        }
+
+        // Create a fake AbstractClientPlayer for rendering
+        AbstractClientPlayer fakePlayer = new AbstractClientPlayer(mc.level, profile) {
+            @Override
+            public boolean isSpectator() {
+                return false;
+            }
+
+            @Override
+            public boolean isCreative() {
+                return false;
+            }
+        };
+
+        // Get player renderer
+        PlayerRenderer playerRenderer = (PlayerRenderer) mc.getEntityRenderDispatcher().getRenderer(fakePlayer);
+
+        float scale = 12.0f;
+
+        graphics.pose().pushPose();
+        graphics.pose().translate(x, y, 50);
+        graphics.pose().scale(scale, scale, scale);
+
+        // Rotate player model
+        Quaternionf quaternion = new Quaternionf().rotateZ((float) Math.PI);
+        Quaternionf quaternion2 = new Quaternionf().rotateX(10.0f * (float) Math.PI / 180.0f);
+        quaternion.mul(quaternion2);
+        graphics.pose().mulPose(quaternion);
+
+        // Set player orientation
+        fakePlayer.yBodyRot = 0.0f;
+        fakePlayer.setYRot(0.0f);
+        fakePlayer.yHeadRot = 0.0f;
+        fakePlayer.yHeadRotO = 0.0f;
+        fakePlayer.setXRot(0.0f);
+        fakePlayer.xRotO = 0.0f;
+
+        EntityRenderDispatcher dispatcher = mc.getEntityRenderDispatcher();
+        quaternion2.conjugate();
+        dispatcher.overrideCameraOrientation(quaternion2);
+        dispatcher.setRenderShadow(false);
+
+        RenderSystem.runAsFancy(() -> {
+            playerRenderer.render(fakePlayer, 0.0f, 1.0f, graphics.pose(), graphics.bufferSource(), 15728880);
+        });
+
+        dispatcher.setRenderShadow(true);
+        graphics.pose().popPose();
+        graphics.flush();
     }
 
     private void renderEntity(GuiGraphics graphics, int x, int y, LivingEntity entity) {

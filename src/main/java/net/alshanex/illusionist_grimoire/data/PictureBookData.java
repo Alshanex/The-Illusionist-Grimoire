@@ -2,14 +2,18 @@ package net.alshanex.illusionist_grimoire.data;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import net.minecraft.core.UUIDUtil;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.resources.ResourceLocation;
 
+import javax.annotation.Nullable;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
 
 public record PictureBookData(int selectedSlot, Map<Integer, SlotData> slots) {
 
@@ -60,13 +64,32 @@ public record PictureBookData(int selectedSlot, Map<Integer, SlotData> slots) {
         return new PictureBookData(this.selectedSlot, newSlots);
     }
 
-    public record SlotData(ResourceLocation entityType, CompoundTag nbt) {
+    public record SlotData(ResourceLocation entityType, CompoundTag nbt, @Nullable UUID playerUUID, @Nullable String playerName, @Nullable String skinTexture, @Nullable String skinSignature) {
+
+        // Constructor for mob disguises
+        public SlotData(ResourceLocation entityType, CompoundTag nbt) {
+            this(entityType, nbt, null, null, null, null);
+        }
+
+        // Constructor for player disguises with skin data
+        public SlotData(UUID playerUUID, String playerName, @Nullable String skinTexture, @Nullable String skinSignature) {
+            this(ResourceLocation.fromNamespaceAndPath("minecraft", "player"), new CompoundTag(), playerUUID, playerName, skinTexture, skinSignature);
+        }
+
+        public boolean isPlayerDisguise() {
+            return playerUUID != null;
+        }
 
         public static final Codec<SlotData> CODEC = RecordCodecBuilder.create(instance ->
                 instance.group(
                         ResourceLocation.CODEC.fieldOf("entityType").forGetter(SlotData::entityType),
-                        CompoundTag.CODEC.fieldOf("nbt").forGetter(SlotData::nbt)
-                ).apply(instance, SlotData::new)
+                        CompoundTag.CODEC.fieldOf("nbt").forGetter(SlotData::nbt),
+                        UUIDUtil.CODEC.optionalFieldOf("playerUUID").forGetter(data -> Optional.ofNullable(data.playerUUID)),
+                        Codec.STRING.optionalFieldOf("playerName").forGetter(data -> Optional.ofNullable(data.playerName)),
+                        Codec.STRING.optionalFieldOf("skinTexture").forGetter(data -> Optional.ofNullable(data.skinTexture)),
+                        Codec.STRING.optionalFieldOf("skinSignature").forGetter(data -> Optional.ofNullable(data.skinSignature))
+                ).apply(instance, (type, nbt, uuid, name, texture, signature) ->
+                        new SlotData(type, nbt, uuid.orElse(null), name.orElse(null), texture.orElse(null), signature.orElse(null)))
         );
 
         public static final StreamCodec<RegistryFriendlyByteBuf, SlotData> STREAM_CODEC =
@@ -75,7 +98,16 @@ public record PictureBookData(int selectedSlot, Map<Integer, SlotData> slots) {
                         SlotData::entityType,
                         ByteBufCodecs.COMPOUND_TAG,
                         SlotData::nbt,
-                        SlotData::new
+                        ByteBufCodecs.optional(UUIDUtil.STREAM_CODEC),
+                        data -> Optional.ofNullable(data.playerUUID),
+                        ByteBufCodecs.optional(ByteBufCodecs.STRING_UTF8),
+                        data -> Optional.ofNullable(data.playerName),
+                        ByteBufCodecs.optional(ByteBufCodecs.STRING_UTF8),
+                        data -> Optional.ofNullable(data.skinTexture),
+                        ByteBufCodecs.optional(ByteBufCodecs.STRING_UTF8),
+                        data -> Optional.ofNullable(data.skinSignature),
+                        (type, nbt, uuid, name, texture, signature) ->
+                                new SlotData(type, nbt, uuid.orElse(null), name.orElse(null), texture.orElse(null), signature.orElse(null))
                 );
     }
 }
