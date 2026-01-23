@@ -1,5 +1,6 @@
 package net.alshanex.illusionist_grimoire.mixin;
 
+import net.alshanex.illusionist_grimoire.data.IGClientSquishData;
 import net.alshanex.illusionist_grimoire.data.SquishData;
 import net.alshanex.illusionist_grimoire.entity.SpellTrapDummyEntity;
 import net.alshanex.illusionist_grimoire.registry.IGEffectRegistry;
@@ -37,7 +38,7 @@ public class EntityEyeHeightMixin {
 
         // Handle squished entities
         if (self instanceof LivingEntity livingEntity && livingEntity.hasEffect(IGEffectRegistry.SQUISH)) {
-            SquishData squishData = SquishData.getSquishData(livingEntity);
+            SquishData squishData = IGClientSquishData.getSquishData(livingEntity);
             if (squishData != null && squishData.isSquished()) {
                 float[] scales = squishData.getScales();
                 float originalEyeHeight = cir.getReturnValue();
