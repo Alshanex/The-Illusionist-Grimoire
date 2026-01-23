@@ -2,6 +2,7 @@ package net.alshanex.illusionist_grimoire.event;
 
 import net.alshanex.illusionist_grimoire.IllusionistGrimoireMod;
 import net.alshanex.illusionist_grimoire.data.DisguiseData;
+import net.alshanex.illusionist_grimoire.data.SquishData;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -14,6 +15,8 @@ public class ServerEvents {
         if (event.getEntity() instanceof ServerPlayer serverPlayer && event.getTarget() instanceof ServerPlayer targetPlayer) {
             DisguiseData.getDisguiseData(targetPlayer).syncToPlayer(serverPlayer);
             DisguiseData.getDisguiseData(serverPlayer).syncToPlayer(targetPlayer);
+            SquishData.getSquishData(targetPlayer).syncToPlayer(serverPlayer);
+            SquishData.getSquishData(serverPlayer).syncToPlayer(targetPlayer);
         }
     }
 
@@ -21,6 +24,7 @@ public class ServerEvents {
     public static void onRespawn(final PlayerEvent.PlayerRespawnEvent event) {
         if (event.getEntity() instanceof ServerPlayer serverPlayer) {
             DisguiseData.getDisguiseData(serverPlayer).syncToPlayer(serverPlayer);
+            SquishData.getSquishData(serverPlayer).syncToPlayer(serverPlayer);
         }
     }
 
@@ -28,6 +32,7 @@ public class ServerEvents {
     public static void onChangeDim(final PlayerEvent.PlayerChangedDimensionEvent event) {
         if (event.getEntity() instanceof ServerPlayer serverPlayer) {
             DisguiseData.getDisguiseData(serverPlayer).syncToPlayer(serverPlayer);
+            SquishData.getSquishData(serverPlayer).syncToPlayer(serverPlayer);
         }
 
     }
@@ -36,6 +41,7 @@ public class ServerEvents {
     public static void onPlayerLoggedIn(PlayerEvent.PlayerLoggedInEvent event) {
         if (event.getEntity() instanceof ServerPlayer serverPlayer) {
             DisguiseData.getDisguiseData(serverPlayer).syncToPlayer(serverPlayer);
+            SquishData.getSquishData(serverPlayer).syncToPlayer(serverPlayer);
         }
     }
 }

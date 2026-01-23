@@ -1,4 +1,6 @@
 {
+  "death.attack.illusionist_grimoire.fear_bolt": "%1$s got a job",
+
   "school.illusionist_grimoire.illusion": "Illusion",
 
   "ui.illusionist_grimoire.wall_size": "Size: %s",
@@ -10,6 +12,7 @@
   "message.illusionist_grimoire.picture_book.no_entity_in_slot": "There's no entity in the selected slot.",
   "message.illusionist_grimoire.picture_book.no_entity_targeted": "No entity targeted",
   "message.illusionist_grimoire.picture_book.entity_bound": "Bound to slot %s: %s",
+  "message.illusionist_grimoire.disguise.no_mana": "Not enough mana",
 
   "tooltip.illusionist_grimoire.picture_book.selected_slot": "Selected Slot: %s",
   "tooltip.illusionist_grimoire.picture_book.bound": "Bound: %s",
@@ -26,6 +29,7 @@
   "effect.illusionist_grimoire.disguised": "Disguised",
   "effect.illusionist_grimoire.emptiness": "Emptiness",
   "effect.illusionist_grimoire.feared": "Feared",
+  "effect.illusionist_grimoire.squish": "Squishable",
 
   "itemGroup.illusionist_grimoire.main_tab": "The Illusionist Grimoire",
 

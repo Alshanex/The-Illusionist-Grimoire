@@ -9,7 +9,8 @@
     "ItemCombinerMenuAccessor",
     "EntityAllianceMixin",
     "ProjectileMixin",
-    "EntityEyeHeightMixin"
+    "EntityEyeHeightMixin",
+    "SquishDimensionsMixin"
   ],
   "client": [
     "ShadowRendererMixin",
@@ -26,7 +27,8 @@
     "WitherAccessor",
     "GuardianAccessor",
     "GuardianTickTrackerMixin",
-    "RabbitAccessor"
+    "RabbitAccessor",
+    "SquishRenderMixin"
   ],
   "injectors": {
     "defaultRequire": 1

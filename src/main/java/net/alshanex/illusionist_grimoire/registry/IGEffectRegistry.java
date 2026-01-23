@@ -5,6 +5,7 @@ import net.alshanex.illusionist_grimoire.IllusionistGrimoireMod;
 import net.alshanex.illusionist_grimoire.effect.DisguisedEffect;
 import net.alshanex.illusionist_grimoire.effect.FearedEffect;
 import net.alshanex.illusionist_grimoire.effect.ParanoiaMobEffect;
+import net.alshanex.illusionist_grimoire.effect.SquishEffect;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectCategory;
@@ -24,4 +25,5 @@ public class IGEffectRegistry {
     public static final DeferredHolder<MobEffect, MobEffect> PARANOIA = MOB_EFFECT_DEFERRED_REGISTER.register("paranoia", () -> new ParanoiaMobEffect(MobEffectCategory.HARMFUL, 4800826));
     public static final DeferredHolder<MobEffect, MobEffect> EMPTINESS = MOB_EFFECT_DEFERRED_REGISTER.register("emptiness", () -> new MagicMobEffect(MobEffectCategory.HARMFUL, 4800826));
     public static final DeferredHolder<MobEffect, MobEffect> FEARED = MOB_EFFECT_DEFERRED_REGISTER.register("feared", () -> new FearedEffect(MobEffectCategory.HARMFUL, 4800826));
+    public static final DeferredHolder<MobEffect, MobEffect> SQUISH = MOB_EFFECT_DEFERRED_REGISTER.register("squish", () -> new SquishEffect(MobEffectCategory.BENEFICIAL, 0xFF9933));
 }

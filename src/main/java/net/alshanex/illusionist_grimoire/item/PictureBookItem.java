@@ -1,10 +1,13 @@
 package net.alshanex.illusionist_grimoire.item;
 
 import com.mojang.authlib.GameProfile;
+import io.redspace.ironsspellbooks.api.magic.MagicData;
 import io.redspace.ironsspellbooks.api.spells.AbstractSpell;
 import io.redspace.ironsspellbooks.api.spells.CastType;
 import io.redspace.ironsspellbooks.api.spells.ISpellContainer;
+import io.redspace.ironsspellbooks.config.ServerConfigs;
 import io.redspace.ironsspellbooks.item.Scroll;
+import io.redspace.ironsspellbooks.network.SyncManaPacket;
 import net.alshanex.illusionist_grimoire.data.DisguiseData;
 import net.alshanex.illusionist_grimoire.data.PictureBookData;
 import net.alshanex.illusionist_grimoire.network.IGSyncPlayerDataPacket;
@@ -90,6 +93,18 @@ public class PictureBookItem extends Item {
                 return InteractionResultHolder.fail(stack);
             }
 
+            if (player instanceof ServerPlayer serverPlayer) {
+                MagicData magicData = MagicData.getPlayerMagicData(serverPlayer);
+                double neededMana = 60;
+                if (!(serverPlayer.isCreative() && !ServerConfigs.CREATIVE_MANA_COST.get())
+                        && magicData.getMana() < neededMana) {
+                    serverPlayer.connection.send(new ClientboundSetActionBarTextPacket(
+                            Component.translatable("message.illusionist_grimoire.disguise.no_mana")
+                                    .withStyle(style -> style.withColor(0xFF5555))));
+                    return InteractionResultHolder.fail(stack);
+                }
+            }
+
             // Check if target is a player
             if (targetEntity instanceof Player targetPlayer) {
                 String skinTexture = null;
@@ -114,6 +129,13 @@ public class PictureBookItem extends Item {
                                             .withStyle(ChatFormatting.GREEN)
                             )
                     );
+
+                    MagicData magicData = MagicData.getPlayerMagicData(serverPlayer);
+                    double neededMana = 60;
+
+                    float newMana = (float) Math.max(magicData.getMana() - neededMana, 0);
+                    magicData.setMana(newMana);
+                    PacketDistributor.sendToPlayer(serverPlayer, new SyncManaPacket(magicData));
                 }
             } else {
                 // Save entity data to selected slot
@@ -132,6 +154,13 @@ public class PictureBookItem extends Item {
                                             .withStyle(ChatFormatting.GREEN)
                             )
                     );
+
+                    MagicData magicData = MagicData.getPlayerMagicData(serverPlayer);
+                    double neededMana = 60;
+
+                    float newMana = (float) Math.max(magicData.getMana() - neededMana, 0);
+                    magicData.setMana(newMana);
+                    PacketDistributor.sendToPlayer(serverPlayer, new SyncManaPacket(magicData));
                 }
             }
 
@@ -177,6 +206,15 @@ public class PictureBookItem extends Item {
             PacketDistributor.sendToPlayersTrackingEntityAndSelf(player, new IGSyncPlayerDataPacket(disguiseData));
             player.addEffect(new MobEffectInstance(IGEffectRegistry.DISGUISED, DISGUISE_DURATION, 0, false, false));
 
+            if(player instanceof ServerPlayer serverPlayer){
+                MagicData magicData = MagicData.getPlayerMagicData(serverPlayer);
+                double neededMana = 60;
+
+                float newMana = (float) Math.max(magicData.getMana() - neededMana, 0);
+                magicData.setMana(newMana);
+                PacketDistributor.sendToPlayer(serverPlayer, new SyncManaPacket(magicData));
+            }
+
             return InteractionResultHolder.success(stack);
         } else {
             disguiseData.disguisedPlayerUUID = null;
@@ -200,6 +238,15 @@ public class PictureBookItem extends Item {
 
                 // Apply effect
                 player.addEffect(new MobEffectInstance(IGEffectRegistry.DISGUISED, DISGUISE_DURATION, 0, false, false));
+
+                if(player instanceof ServerPlayer serverPlayer){
+                    MagicData magicData = MagicData.getPlayerMagicData(serverPlayer);
+                    double neededMana = 60;
+
+                    float newMana = (float) Math.max(magicData.getMana() - neededMana, 0);
+                    magicData.setMana(newMana);
+                    PacketDistributor.sendToPlayer(serverPlayer, new SyncManaPacket(magicData));
+                }
 
                 return InteractionResultHolder.success(stack);
             }

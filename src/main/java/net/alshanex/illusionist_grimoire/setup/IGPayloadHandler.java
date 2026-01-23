@@ -2,10 +2,7 @@ package net.alshanex.illusionist_grimoire.setup;
 
 import net.alshanex.illusionist_grimoire.IllusionistGrimoireMod;
 import net.alshanex.illusionist_grimoire.data.IGClientData;
-import net.alshanex.illusionist_grimoire.network.ClearDisguiseSlotPacket;
-import net.alshanex.illusionist_grimoire.network.IGSyncEntityDataPacket;
-import net.alshanex.illusionist_grimoire.network.IGSyncPlayerDataPacket;
-import net.alshanex.illusionist_grimoire.network.SelectDisguiseSlotPacket;
+import net.alshanex.illusionist_grimoire.network.*;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
@@ -25,6 +22,7 @@ public class IGPayloadHandler {
                     context.enqueueWork(() -> IGClientData.handleEntitySyncedData(packet.entityId(), packet.data()));
                 }
         );
+        payloadRegistrar.playToClient(IGSyncSquishDataPacket.TYPE, IGSyncSquishDataPacket.STREAM_CODEC, IGSyncSquishDataPacket::handle);
 
         payloadRegistrar.playToServer(SelectDisguiseSlotPacket.TYPE, SelectDisguiseSlotPacket.STREAM_CODEC, SelectDisguiseSlotPacket::handle);
         payloadRegistrar.playToServer(ClearDisguiseSlotPacket.TYPE, ClearDisguiseSlotPacket.STREAM_CODEC, ClearDisguiseSlotPacket::handle);
