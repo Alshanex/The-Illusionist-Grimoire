@@ -3,9 +3,11 @@ package net.alshanex.illusionist_grimoire.event;
 import net.alshanex.illusionist_grimoire.IllusionistGrimoireMod;
 import net.alshanex.illusionist_grimoire.data.DisguiseData;
 import net.alshanex.illusionist_grimoire.data.SquishData;
+import net.alshanex.illusionist_grimoire.registry.IGEffectRegistry;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.event.entity.living.MobEffectEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 
 @EventBusSubscriber(modid = IllusionistGrimoireMod.MODID)
@@ -42,6 +44,13 @@ public class ServerEvents {
         if (event.getEntity() instanceof ServerPlayer serverPlayer) {
             DisguiseData.getDisguiseData(serverPlayer).syncToPlayer(serverPlayer);
             SquishData.getSquishData(serverPlayer).syncToPlayer(serverPlayer);
+        }
+    }
+
+    @SubscribeEvent
+    public static void refreshDimensionsAfterSquish(MobEffectEvent.Remove event){
+        if (event.getEffect().is(IGEffectRegistry.SQUISH)){
+            event.getEntity().refreshDimensions();
         }
     }
 }

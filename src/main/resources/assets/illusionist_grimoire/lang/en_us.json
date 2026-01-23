@@ -56,5 +56,8 @@
   "spell.illusionist_grimoire.emptiness.guide": "Casts an illusion on the target to make him see the world empty. On non player targets it will freeze them in place.",
   "spell.illusionist_grimoire.fear_bolt": "Fear Bolt",
   "spell.illusionist_grimoire.fear_bolt.desc": "Casts a bolt filled with illusion magic that makes the target see what he fears the most in this world.",
-  "spell.illusionist_grimoire.fear_bolt.guide": "Casts a bolt filled with illusion magic that makes the target see what he fears the most in this world."
+  "spell.illusionist_grimoire.fear_bolt.guide": "Casts a bolt filled with illusion magic that makes the target see what he fears the most in this world.",
+  "spell.illusionist_grimoire.squish": "Squish",
+  "spell.illusionist_grimoire.squish.desc": "Casts a powerful spell that makes the target body squish in various ways.",
+  "spell.illusionist_grimoire.squish.guide": "Casts a powerful spell that makes the target body squish in various ways."
 }
