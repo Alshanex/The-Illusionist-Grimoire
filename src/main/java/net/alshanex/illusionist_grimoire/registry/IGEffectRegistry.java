@@ -25,5 +25,5 @@ public class IGEffectRegistry {
     public static final DeferredHolder<MobEffect, MobEffect> PARANOIA = MOB_EFFECT_DEFERRED_REGISTER.register("paranoia", () -> new ParanoiaMobEffect(MobEffectCategory.HARMFUL, 4800826));
     public static final DeferredHolder<MobEffect, MobEffect> EMPTINESS = MOB_EFFECT_DEFERRED_REGISTER.register("emptiness", () -> new MagicMobEffect(MobEffectCategory.HARMFUL, 4800826));
     public static final DeferredHolder<MobEffect, MobEffect> FEARED = MOB_EFFECT_DEFERRED_REGISTER.register("feared", () -> new FearedEffect(MobEffectCategory.HARMFUL, 4800826));
-    public static final DeferredHolder<MobEffect, MobEffect> SQUISH = MOB_EFFECT_DEFERRED_REGISTER.register("squish", () -> new SquishEffect(MobEffectCategory.BENEFICIAL, 0xFF9933));
+    public static final DeferredHolder<MobEffect, MobEffect> SQUISH = MOB_EFFECT_DEFERRED_REGISTER.register("squish", () -> new SquishEffect(MobEffectCategory.NEUTRAL, 0xFF9933));
 }
