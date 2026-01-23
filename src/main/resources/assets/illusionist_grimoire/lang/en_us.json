@@ -37,14 +37,20 @@
 
   "spell.illusionist_grimoire.illusion_wall": "Wonderwall",
   "spell.illusionist_grimoire.illusion_wall.desc": "Creates an illusionary wall ahead of the caster for 30 seconds, making entities lose track of it.",
+  "spell.illusionist_grimoire.illusion_wall.guide": "Creates an illusionary wall ahead of the caster for 30 seconds, making entities lose track of it.",
   "spell.illusionist_grimoire.depth_trick": "Distort",
   "spell.illusionist_grimoire.depth_trick.desc": "Creates a strong distortion in the target's eyes, making him see entities in sizes that shouldn't be possible. Only works on players.",
+  "spell.illusionist_grimoire.depth_trick.guide": "Creates a strong distortion in the target's eyes, making him see entities in sizes that shouldn't be possible. Only works on players.",
   "spell.illusionist_grimoire.paranoia": "Paranoia",
   "spell.illusionist_grimoire.paranoia.desc": "Casts a strong illusion on the target, making it suffer from hallucinations for some time.",
+  "spell.illusionist_grimoire.paranoia.guide": "Casts a strong illusion on the target, making it suffer from hallucinations for some time.",
   "spell.illusionist_grimoire.disguise": "Disguise",
   "spell.illusionist_grimoire.disguise.desc": "Casts an illusion on yourself to look like the entity you want.",
+  "spell.illusionist_grimoire.disguise.guide": "Casts an illusion on yourself to look like the entity you want.",
   "spell.illusionist_grimoire.emptiness": "Empty World",
   "spell.illusionist_grimoire.emptiness.desc": "Casts an illusion on the target to make him see the world empty. On non player targets it will freeze them in place.",
+  "spell.illusionist_grimoire.emptiness.guide": "Casts an illusion on the target to make him see the world empty. On non player targets it will freeze them in place.",
   "spell.illusionist_grimoire.fear_bolt": "Fear Bolt",
-  "spell.illusionist_grimoire.fear_bolt.desc": "Casts a bolt filled with illusion magic that makes the target see what he fears the most in this world."
+  "spell.illusionist_grimoire.fear_bolt.desc": "Casts a bolt filled with illusion magic that makes the target see what he fears the most in this world.",
+  "spell.illusionist_grimoire.fear_bolt.guide": "Casts a bolt filled with illusion magic that makes the target see what he fears the most in this world."
 }

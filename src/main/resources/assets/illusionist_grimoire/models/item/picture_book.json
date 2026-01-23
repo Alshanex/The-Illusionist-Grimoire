@@ -1,0 +1,26 @@
+{
+  "parent": "minecraft:item/handheld",
+  "loader": "neoforge:separate_transforms",
+  "base": {
+    "textures": {
+      "book": "illusionist_grimoire:item/book_models/picture_book",
+      "particle": "illusionist_grimoire:item/book_models/picture_book"
+    },
+    "parent": "irons_spellbooks:item/template_spell_book_model"
+  },
+  "perspectives": {
+    "gui": {
+      "parent": "item/generated",
+      "textures": {
+        "layer0": "illusionist_grimoire:item/picture_book"
+      }
+    },
+    "head": {
+      "textures": {
+        "book": "illusionist_grimoire:item/book_models/picture_book",
+        "particle": "illusionist_grimoire:item/book_models/picture_book"
+      },
+      "parent": "irons_spellbooks:item/template_spell_book_model_open"
+    }
+  }
+}

@@ -185,12 +185,15 @@ public class DisguiseSelectionScreen extends Screen {
         graphics.pose().mulPose(quaternion);
 
         // Set player orientation
-        fakePlayer.yBodyRot = 0.0f;
-        fakePlayer.setYRot(0.0f);
-        fakePlayer.yHeadRot = 0.0f;
-        fakePlayer.yHeadRotO = 0.0f;
+        fakePlayer.yBodyRot = 0f;
+        fakePlayer.setYRot(0f);
+        fakePlayer.yHeadRot = 0f;
+        fakePlayer.yHeadRotO = 0f;
         fakePlayer.setXRot(0.0f);
         fakePlayer.xRotO = 0.0f;
+
+        // Enable all skin layers (hat, jacket, sleeves, pants)
+        fakePlayer.getEntityData().set(net.minecraft.world.entity.player.Player.DATA_PLAYER_MODE_CUSTOMISATION, (byte) 0xFF);
 
         EntityRenderDispatcher dispatcher = mc.getEntityRenderDispatcher();
         quaternion2.conjugate();

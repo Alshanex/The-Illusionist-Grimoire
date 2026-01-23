@@ -6,18 +6,20 @@
       "item": "irons_spellbooks:chained_book"
     },
     "S": {
-      "item": "irons_spellbooks:scroll",
+      "type": "neoforge:components",
+      "items": [
+        "irons_spellbooks:scroll"
+      ],
       "components": {
         "irons_spellbooks:spell_container": {
           "maxSpells": 1,
           "spellWheel": false,
           "mustEquip": false,
-          "improved": false,
           "data": [
             {
               "id": "illusionist_grimoire:disguise",
-              "level": 1,
               "index": 0,
+              "level": 1,
               "locked": true
             }
           ]
