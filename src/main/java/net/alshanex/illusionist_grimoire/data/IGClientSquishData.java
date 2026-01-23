@@ -24,6 +24,9 @@ public class IGClientSquishData {
         if (entity == null) {
             // Entity not loaded yet, just store the data
             entitySquishDataLookup.put(receivedData.getEntityId(), receivedData);
+            if (entity instanceof net.minecraft.world.entity.LivingEntity livingEntity) {
+                livingEntity.refreshDimensions();
+            }
             return;
         }
 

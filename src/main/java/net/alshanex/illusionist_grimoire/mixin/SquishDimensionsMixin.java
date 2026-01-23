@@ -1,5 +1,6 @@
 package net.alshanex.illusionist_grimoire.mixin;
 
+import net.alshanex.illusionist_grimoire.data.IGClientSquishData;
 import net.alshanex.illusionist_grimoire.data.SquishData;
 import net.alshanex.illusionist_grimoire.registry.IGEffectRegistry;
 import net.minecraft.world.entity.EntityDimensions;
@@ -32,7 +33,14 @@ public abstract class SquishDimensionsMixin {
             return;
         }
 
-        SquishData squishData = SquishData.getSquishData(entity);
+        SquishData squishData;
+        if (entity.level().isClientSide()) {
+            // Client side - use the synced data from packets
+            squishData = IGClientSquishData.getSquishData(entity);
+        } else {
+            // Server side - use the attachment data
+            squishData = SquishData.getSquishData(entity);
+        }
         if (squishData == null || !squishData.isSquished()) {
             return;
         }

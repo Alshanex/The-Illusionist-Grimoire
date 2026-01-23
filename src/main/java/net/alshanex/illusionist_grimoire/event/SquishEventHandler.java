@@ -53,10 +53,10 @@ public class SquishEventHandler {
         var damageSource = event.getSource();
 
         // Falling blocks (anvils, sand, gravel, etc.)
-        if (damageSource.is(DamageTypes.FALLING_BLOCK)) {
+        if (damageSource.is(DamageTypes.FALLING_BLOCK) || damageSource.is(DamageTypes.FALLING_ANVIL)) {
             handleFallingBlockSquish(entity, squishData, event.getOriginalDamage());
         }
-        // Flying into walls at high speed (elytra crashes) - very Looney Tunes!
+        // Flying into walls at high speed (elytra crashes)
         else if (damageSource.is(DamageTypes.FLY_INTO_WALL)) {
             handleWallSplatSquish(entity, squishData, event.getOriginalDamage());
         }
@@ -87,6 +87,7 @@ public class SquishEventHandler {
                     if (squishData != null) {
                         // Reduce thickness by 50% (0.5)
                         squishData.applySquish(pistonDirection.getAxis(), 0.5f);
+                        entity.refreshDimensions();
                     }
                 }
             }
@@ -105,6 +106,7 @@ public class SquishEventHandler {
             // Light block - moderate squash
             squishData.applySquish(Direction.Axis.Y, 0.4f);
         }
+        entity.refreshDimensions();
     }
 
     private static void handleWallSplatSquish(LivingEntity entity, SquishData squishData, float damage) {
@@ -135,6 +137,7 @@ public class SquishEventHandler {
         }
 
         squishData.applySquish(splatAxis, squishAmount);
+        entity.refreshDimensions();
     }
 
     private static void handleFallDamageSquish(LivingEntity entity, SquishData squishData, float damage) {
@@ -153,16 +156,13 @@ public class SquishEventHandler {
             // Small fall (5-10 blocks) - light squish
             squishData.applySquish(Direction.Axis.Y, 0.5f);
         }
+        entity.refreshDimensions();
     }
 
 
     private static void handleCrammingSquish(LivingEntity entity, SquishData squishData) {
         Direction.Axis axis = entity.getRandom().nextBoolean() ? Direction.Axis.X : Direction.Axis.Z;
         squishData.applySquish(axis, 0.5f);
-    }
-
-    private static boolean isBlockSolid(LivingEntity entity, BlockPos pos) {
-        BlockState state = entity.level().getBlockState(pos);
-        return !state.isAir() && state.canOcclude();
+        entity.refreshDimensions();
     }
 }

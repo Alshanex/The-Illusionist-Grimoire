@@ -6,6 +6,7 @@ import net.alshanex.illusionist_grimoire.data.DisguiseDataProvider;
 import net.alshanex.illusionist_grimoire.data.SquishData;
 import net.alshanex.illusionist_grimoire.data.SquishDataProvider;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.LivingEntity;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.attachment.AttachmentType;
 import net.neoforged.neoforge.registries.DeferredHolder;
@@ -22,7 +23,10 @@ public class IGDataAttachments {
     public static final DeferredHolder<AttachmentType<?>, AttachmentType<DisguiseData>> DISGUISE_DATA = ATTACHMENT_TYPES.register("disguise_data",
             () -> AttachmentType.builder((holder) -> holder instanceof ServerPlayer serverPlayer ? new DisguiseData(serverPlayer) : new DisguiseData()).serialize(new DisguiseDataProvider()).build());
 
-    public static final DeferredHolder<AttachmentType<?>, AttachmentType<SquishData>> SQUISH_DATA = ATTACHMENT_TYPES.register("squish_data",
-            () -> AttachmentType.builder(() -> new SquishData()).serialize(new SquishDataProvider()).build());
+    public static final DeferredHolder<AttachmentType<?>, AttachmentType<SquishData>> SQUISH_DATA =
+            ATTACHMENT_TYPES.register("squish_data",
+                    () -> AttachmentType.builder((holder) ->
+                            holder instanceof LivingEntity le ? new SquishData(le) : new SquishData()
+                    ).serialize(new SquishDataProvider()).build());
 
 }
