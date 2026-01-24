@@ -5,16 +5,15 @@ import io.redspace.ironsspellbooks.api.magic.MagicData;
 import io.redspace.ironsspellbooks.api.spells.AbstractSpell;
 import io.redspace.ironsspellbooks.api.spells.CastType;
 import io.redspace.ironsspellbooks.api.spells.ISpellContainer;
+import io.redspace.ironsspellbooks.capabilities.magic.MagicManager;
 import io.redspace.ironsspellbooks.config.ServerConfigs;
 import io.redspace.ironsspellbooks.item.Scroll;
 import io.redspace.ironsspellbooks.network.SyncManaPacket;
+import io.redspace.ironsspellbooks.particle.BlastwaveParticleOptions;
 import net.alshanex.illusionist_grimoire.data.DisguiseData;
 import net.alshanex.illusionist_grimoire.data.PictureBookData;
 import net.alshanex.illusionist_grimoire.network.IGSyncPlayerDataPacket;
-import net.alshanex.illusionist_grimoire.registry.IGDataAttachments;
-import net.alshanex.illusionist_grimoire.registry.IGDataComponents;
-import net.alshanex.illusionist_grimoire.registry.IGEffectRegistry;
-import net.alshanex.illusionist_grimoire.registry.IGSpellRegistry;
+import net.alshanex.illusionist_grimoire.registry.*;
 import net.alshanex.illusionist_grimoire.util.ModTags;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -137,6 +136,8 @@ public class PictureBookItem extends Item {
                     magicData.setMana(newMana);
                     PacketDistributor.sendToPlayer(serverPlayer, new SyncManaPacket(magicData));
                 }
+
+                MagicManager.spawnParticles(level, new BlastwaveParticleOptions(IGSchoolRegistry.ILLUSIONISM.get().getTargetingColor(), (targetEntity.getBbWidth() / 2) + 1), targetEntity.getX(), targetEntity.getY() + .165f, targetEntity.getZ(), 1, 0, 0, 0, 0, true);
             } else {
                 // Save entity data to selected slot
                 CompoundTag entityNBT = new CompoundTag();
@@ -162,6 +163,8 @@ public class PictureBookItem extends Item {
                     magicData.setMana(newMana);
                     PacketDistributor.sendToPlayer(serverPlayer, new SyncManaPacket(magicData));
                 }
+
+                MagicManager.spawnParticles(level, new BlastwaveParticleOptions(IGSchoolRegistry.ILLUSIONISM.get().getTargetingColor(), (targetEntity.getBbWidth() / 2) + 1), targetEntity.getX(), targetEntity.getY() + .165f, targetEntity.getZ(), 1, 0, 0, 0, 0, true);
             }
 
             // Consume

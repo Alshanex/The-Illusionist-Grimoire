@@ -3,39 +3,17 @@ package net.alshanex.illusionist_grimoire.event;
 import net.alshanex.illusionist_grimoire.IllusionistGrimoireMod;
 import net.alshanex.illusionist_grimoire.data.SquishData;
 import net.alshanex.illusionist_grimoire.registry.IGEffectRegistry;
-import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.level.block.piston.PistonMovingBlockEntity;
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.living.LivingDamageEvent;
-import net.neoforged.neoforge.event.entity.living.LivingEvent;
-import net.neoforged.neoforge.event.tick.EntityTickEvent;
 
 @EventBusSubscriber(modid = IllusionistGrimoireMod.MODID)
 public class SquishEventHandler {
-
-    @SubscribeEvent
-    public static void onLivingTick(EntityTickEvent.Post event) {
-        Entity entity = event.getEntity();
-
-        if(entity instanceof LivingEntity livingEntity){
-            // Only process if entity has the squish effect
-            if (!livingEntity.hasEffect(IGEffectRegistry.SQUISH)) {
-                return;
-            }
-
-            // Check if entity is being pushed by a piston
-            checkPistonSquish(livingEntity);
-        }
-    }
-
     @SubscribeEvent
     public static void onLivingDamage(LivingDamageEvent.Pre event) {
         LivingEntity entity = event.getEntity();
@@ -60,37 +38,10 @@ public class SquishEventHandler {
         else if (damageSource.is(DamageTypes.FLY_INTO_WALL)) {
             handleWallSplatSquish(entity, squishData, event.getOriginalDamage());
         }
-        // Being crushed/crammed by too many entities
-        else if (damageSource.is(DamageTypes.CRAMMING)) {
-            handleCrammingSquish(entity, squishData);
-        }
         else if (damageSource.is(DamageTypes.FALL)) {
             handleFallDamageSquish(entity, squishData, event.getOriginalDamage());
-        }
-    }
-
-    private static void checkPistonSquish(LivingEntity entity) {
-        BlockPos entityPos = entity.blockPosition();
-
-        // Check surrounding blocks for moving pistons
-        for (Direction direction : Direction.values()) {
-            BlockPos checkPos = entityPos.relative(direction);
-
-            if (entity.level().getBlockEntity(checkPos) instanceof PistonMovingBlockEntity pistonMoving) {
-                // Get the direction the piston is pushing
-                Direction pistonDirection = pistonMoving.getDirection();
-
-                // Check if piston is extending (pushing)
-                if (pistonMoving.isExtending()) {
-                    // Apply squish in the direction of the push
-                    SquishData squishData = SquishData.getSquishData(entity);
-                    if (squishData != null) {
-                        // Reduce thickness by 50% (0.5)
-                        squishData.applySquish(pistonDirection.getAxis(), 0.5f);
-                        entity.refreshDimensions();
-                    }
-                }
-            }
+        } else {
+            handleDirectionalDamageSquish(entity, squishData, damageSource, event.getOriginalDamage());
         }
     }
 
@@ -159,10 +110,52 @@ public class SquishEventHandler {
         entity.refreshDimensions();
     }
 
+    private static void handleDirectionalDamageSquish(LivingEntity entity, SquishData squishData,
+                                                      net.minecraft.world.damagesource.DamageSource damageSource,
+                                                      float damage) {
+        // Try to get the position where the damage came from
+        Vec3 sourcePos = damageSource.getSourcePosition();
 
-    private static void handleCrammingSquish(LivingEntity entity, SquishData squishData) {
-        Direction.Axis axis = entity.getRandom().nextBoolean() ? Direction.Axis.X : Direction.Axis.Z;
-        squishData.applySquish(axis, 0.5f);
+        if (sourcePos == null) {
+            // If no source position, check if there's a direct entity (like a projectile or attacker)
+            Entity directEntity = damageSource.getDirectEntity();
+            if (directEntity != null) {
+                sourcePos = directEntity.position();
+            }
+        }
+
+        if (sourcePos != null) {
+            // Calculate direction vector from damage source to entity
+            Vec3 entityPos = entity.position();
+            Vec3 direction = entityPos.subtract(sourcePos);
+
+            // Find which axis had the most impact (largest absolute difference)
+            double absX = Math.abs(direction.x);
+            double absY = Math.abs(direction.y);
+            double absZ = Math.abs(direction.z);
+
+            Direction.Axis squishAxis;
+            if (absX > absY && absX > absZ) {
+                squishAxis = Direction.Axis.X;
+            } else if (absY > absX && absY > absZ) {
+                squishAxis = Direction.Axis.Y;
+            } else {
+                squishAxis = Direction.Axis.Z;
+            }
+
+            // Squish amount based on damage (more damage = more squish)
+            float squishAmount;
+            if (damage >= (entity.getMaxHealth() * 0.66f)) {
+                squishAmount = 0.25f; // Heavy hit
+            } else if (damage >= (entity.getMaxHealth() * 0.33f)) {
+                squishAmount = 0.4f; // Medium hit
+            } else {
+                squishAmount = 0.6f; // Light hit
+            }
+
+            squishData.applySquish(squishAxis, squishAmount);
+        }
+
         entity.refreshDimensions();
     }
 }
