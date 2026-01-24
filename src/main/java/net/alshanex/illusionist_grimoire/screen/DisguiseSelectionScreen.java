@@ -13,6 +13,7 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.client.renderer.entity.player.PlayerRenderer;
+import net.minecraft.client.resources.PlayerSkin;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -166,6 +167,13 @@ public class DisguiseSelectionScreen extends Screen {
             @Override
             public boolean isCreative() {
                 return false;
+            }
+
+            @Override
+            public PlayerSkin getSkin() {
+                return Minecraft.getInstance()
+                        .getSkinManager()
+                        .getInsecureSkin(this.getGameProfile());
             }
         };
 
