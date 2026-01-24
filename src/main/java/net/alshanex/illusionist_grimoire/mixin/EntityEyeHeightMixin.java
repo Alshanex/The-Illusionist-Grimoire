@@ -45,7 +45,7 @@ public class EntityEyeHeightMixin {
 
                 // Scale eye height based on Y-axis squish
                 float newEyeHeight = originalEyeHeight * scales[1];
-                cir.setReturnValue(newEyeHeight);
+                cir.setReturnValue(Math.max(newEyeHeight, 0.2f));
             }
         }
     }
