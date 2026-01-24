@@ -86,7 +86,19 @@ public class SquishSpell extends AbstractSpell {
 
     @Override
     public boolean checkPreCastConditions(Level level, int spellLevel, LivingEntity entity, MagicData playerMagicData) {
-        Utils.preCastTargetHelper(level, entity, playerMagicData, this, 15, .35f, false);
+        if (Utils.preCastTargetHelper(level, entity, playerMagicData, this, 10, .15f)) {
+            var target = ((TargetEntityCastData) playerMagicData.getAdditionalCastData()).getTarget((ServerLevel) level);
+            if (target != null && target.getType().is(ModTags.SQUISH_BLACKLIST)){
+                if(entity instanceof ServerPlayer serverPlayer){
+                    serverPlayer.connection.send(
+                            new ClientboundSetActionBarTextPacket(Component.translatable("message.illusionist_grimoire.squish.blacklisted_mob")
+                                    .withStyle(ChatFormatting.RED)));
+                }
+                return false;
+            }
+            playerMagicData.setAdditionalCastData(new TargetEntityCastData(target));
+            return true;
+        }
         return true;
     }
 

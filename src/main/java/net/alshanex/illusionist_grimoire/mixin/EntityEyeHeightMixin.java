@@ -37,7 +37,7 @@ public class EntityEyeHeightMixin {
         Entity self = (Entity)(Object)this;
 
         // Handle squished entities
-        if (self instanceof LivingEntity livingEntity && livingEntity.hasEffect(IGEffectRegistry.SQUISH)) {
+        if (self instanceof LivingEntity livingEntity) {
             SquishData squishData = IGClientSquishData.getSquishData(livingEntity);
             if (squishData != null && squishData.isSquished()) {
                 float[] scales = squishData.getScales();

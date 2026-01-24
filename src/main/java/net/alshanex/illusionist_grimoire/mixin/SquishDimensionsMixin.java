@@ -11,9 +11,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-/**
- * Mixin to modify entity dimensions based on squish state
- */
 @Mixin(LivingEntity.class)
 public abstract class SquishDimensionsMixin {
 
@@ -22,16 +19,6 @@ public abstract class SquishDimensionsMixin {
             cancellable = true)
     private void modifySquishDimensions(Pose pose, CallbackInfoReturnable<EntityDimensions> cir) {
         LivingEntity entity = (LivingEntity) (Object) this;
-
-        // Check if entity has squish effect (with safety check for null activeEffects)
-        try {
-            if (!entity.hasEffect(IGEffectRegistry.SQUISH)) {
-                return;
-            }
-        } catch (NullPointerException e) {
-            // Entity not fully initialized yet, skip
-            return;
-        }
 
         SquishData squishData;
         if (entity.level().isClientSide()) {

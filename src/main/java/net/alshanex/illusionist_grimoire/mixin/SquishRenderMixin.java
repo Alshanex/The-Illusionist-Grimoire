@@ -25,10 +25,6 @@ public abstract class SquishRenderMixin {
     private void applySquishScale(LivingEntity entity, float entityYaw, float partialTicks,
                                   PoseStack poseStack, MultiBufferSource buffer, int packedLight,
                                   CallbackInfo ci) {
-        // Only apply squish if entity has the effect
-        if (!entity.hasEffect(IGEffectRegistry.SQUISH)) {
-            return;
-        }
 
         SquishData squishData = IGClientSquishData.getSquishData(entity);
         if (squishData == null || !squishData.isSquished()) {

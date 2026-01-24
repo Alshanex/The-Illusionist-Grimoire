@@ -13,6 +13,7 @@ import java.util.ArrayList;
 public class ModTags {
     public static final TagKey<EntityType<?>> ILLUSION_IMMUNE_ENTITIES = TagKey.create(Registries.ENTITY_TYPE, ResourceLocation.fromNamespaceAndPath(IllusionistGrimoireMod.MODID, "illusion_immune"));
     public static final TagKey<EntityType<?>> DISGUISE_BLACKLIST = TagKey.create(Registries.ENTITY_TYPE, ResourceLocation.fromNamespaceAndPath(IllusionistGrimoireMod.MODID, "disguise_blacklist"));
+    public static final TagKey<EntityType<?>> SQUISH_BLACKLIST = TagKey.create(Registries.ENTITY_TYPE, ResourceLocation.fromNamespaceAndPath(IllusionistGrimoireMod.MODID, "squish_blacklist"));
 
     public static TagKey<AbstractSpell> TRAP_SPELL_BLACKLIST = create(ResourceLocation.fromNamespaceAndPath(IllusionistGrimoireMod.MODID, "trap_spell_blacklist"));
     public static TagKey<AbstractSpell> IS_SUPPORT_SPELL = create(ResourceLocation.fromNamespaceAndPath(IllusionistGrimoireMod.MODID, "is_support_spell"));
