@@ -17,6 +17,10 @@ import net.neoforged.neoforge.client.event.RenderLivingEvent;
 public class DepthTrickClientEventHandler {
     @SubscribeEvent
     public static void onRenderEntity(RenderLivingEvent.Pre<?, ?> event) {
+        if (event.isCanceled()) {
+            return;
+        }
+
         Player player = Minecraft.getInstance().player;
 
         if (player != null && player.hasEffect(IGEffectRegistry.DEPTH_TRICK)) {
