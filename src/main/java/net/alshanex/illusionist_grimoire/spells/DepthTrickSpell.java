@@ -96,7 +96,7 @@ public class DepthTrickSpell extends AbstractSpell {
                 }
 
                 if(!canBypassIllusion) {
-                    targetEntity.addEffect(new MobEffectInstance(IGEffectRegistry.DEPTH_TRICK, getDuration(spellLevel, entity), 0));
+                    targetEntity.addEffect(new MobEffectInstance(IGEffectRegistry.DEPTH_TRICK, getDuration(spellLevel, entity), 0, false, false));
                 }
             }
         }

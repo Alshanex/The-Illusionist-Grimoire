@@ -96,7 +96,7 @@ public class ParanoiaSpell extends AbstractSpell {
                 }
 
                 if(!canBypassIllusion) {
-                    targetEntity.addEffect(new MobEffectInstance(IGEffectRegistry.PARANOIA, getDuration(spellLevel, entity), 0));
+                    targetEntity.addEffect(new MobEffectInstance(IGEffectRegistry.PARANOIA, getDuration(spellLevel, entity), 0, false, false));
                 }
             }
         }

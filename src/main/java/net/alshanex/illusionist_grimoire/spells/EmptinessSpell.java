@@ -96,7 +96,7 @@ public class EmptinessSpell extends AbstractSpell {
                 }
 
                 if(!canBypassIllusion) {
-                    targetEntity.addEffect(new MobEffectInstance(IGEffectRegistry.EMPTINESS, getDuration(spellLevel, entity), 0));
+                    targetEntity.addEffect(new MobEffectInstance(IGEffectRegistry.EMPTINESS, getDuration(spellLevel, entity), 0, false, false));
                     if(!(targetEntity instanceof Player)){
                         targetEntity.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, getDuration(spellLevel, entity), 5));
                     }
