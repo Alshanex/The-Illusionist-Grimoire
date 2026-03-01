@@ -2,7 +2,6 @@ package net.alshanex.illusionist_grimoire.event;
 
 import com.mojang.authlib.GameProfile;
 import io.redspace.ironsspellbooks.api.util.Utils;
-import io.redspace.ironsspellbooks.player.KeyState;
 import net.alshanex.illusionist_grimoire.IllusionistGrimoireMod;
 import net.alshanex.illusionist_grimoire.data.IGClientData;
 import net.alshanex.illusionist_grimoire.item.PictureBookItem;
@@ -144,32 +143,18 @@ public class ClientEvents {
 		);
 	}
 
-	private static final ArrayList<KeyState> KEY_STATES = new ArrayList<>();
-	private static final KeyState SCREEN_STATE = register(SCREEN_KEYMAP);
-
-	private static KeyState register(KeyMapping key) {
-		var k = new KeyState(key);
-		KEY_STATES.add(k);
-		return k;
-	}
-
 	@SubscribeEvent
-	public static void onKeyInput(InputEvent.Key event) {
-		handleInputEvent(event.getKey(), event.getAction());
+	public static void onClientTick(ClientTickEvent.Post event) {
+		handleKeybinds();
 	}
 
-	@SubscribeEvent
-	public static void onMouseInput(InputEvent.MouseButton.Pre event) {
-		handleInputEvent(event.getButton(), event.getAction());
-	}
-
-	private static void handleInputEvent(int button, int action) {
+	private static void handleKeybinds() {
 		var minecraft = Minecraft.getInstance();
 		Player player = minecraft.player;
 		if (player == null) {
 			return;
 		}
-		if (SCREEN_STATE.wasPressed() && minecraft.screen == null) {
+		while (SCREEN_KEYMAP.consume()) {
 			ItemStack mainHand = player.getMainHandItem();
 
 			ItemStack pictureBookStack = null;
@@ -181,13 +166,6 @@ public class ClientEvents {
 			if (pictureBookStack != null) {
 				minecraft.setScreen(new DisguiseSelectionScreen(pictureBookStack));
 			}
-		}
-		update();
-	}
-
-	private static void update() {
-		for (KeyState k : KEY_STATES) {
-			k.update();
 		}
 	}
 }
