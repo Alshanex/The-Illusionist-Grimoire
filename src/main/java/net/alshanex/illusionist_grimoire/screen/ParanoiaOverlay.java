@@ -33,7 +33,6 @@ public class ParanoiaOverlay implements LayeredDraw.Layer {
             RenderSystem.enableBlend();
             RenderSystem.defaultBlendFunc();
 
-            // --- Customization Section ---
             int amplifier = player.getEffect(IGEffectRegistry.PARANOIA).getAmplifier();
             float baseAlpha = 0.5F + (amplifier * 0.1F);
             baseAlpha = Mth.clamp(baseAlpha, 0.0F, 1.0F);
