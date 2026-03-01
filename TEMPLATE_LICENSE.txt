@@ -1,4 +1,4 @@
-MIT License
+MIT License (for code, assets are ARR)
 
 Copyright (c) 2023 NeoForged project
 
